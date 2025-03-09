@@ -180,6 +180,51 @@ export type Database = {
           },
         ]
       }
+      trip_plans: {
+        Row: {
+          ai_response: Json | null
+          budget: number
+          created_at: string
+          destination: string
+          end_date: string
+          id: string
+          interests: string | null
+          source: string
+          start_date: string
+          travelers: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: Json | null
+          budget: number
+          created_at?: string
+          destination: string
+          end_date: string
+          id?: string
+          interests?: string | null
+          source: string
+          start_date: string
+          travelers: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: Json | null
+          budget?: number
+          created_at?: string
+          destination?: string
+          end_date?: string
+          id?: string
+          interests?: string | null
+          source?: string
+          start_date?: string
+          travelers?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           budget: number
