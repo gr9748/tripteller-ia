@@ -52,15 +52,28 @@ const TripPlanForm: React.FC = () => {
       setIsSubmitting(true);
       toast.info('Generating your personalized trip plan...');
       
-      // Get the user's session for authentication
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      // Get the current session and token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Session error:', sessionError);
+        toast.error('Authentication error. Please sign in again.');
+        // Force a logout and redirect to login
+        await supabase.auth.signOut();
+        navigate('/login');
+        return;
+      }
+      
+      const token = sessionData.session.access_token;
       
       if (!token) {
         toast.error('Authentication error. Please sign in again.');
         navigate('/login');
         return;
       }
+      
+      // Add some logging to debug
+      console.log('Sending request with token', token.substring(0, 10) + '...');
       
       const { data, error } = await supabase.functions.invoke('generate-trip-plan', {
         body: {

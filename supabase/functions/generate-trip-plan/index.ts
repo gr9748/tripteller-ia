@@ -21,6 +21,7 @@ serve(async (req) => {
     // Extract the JWT token from the Authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid authorization header");
       return new Response(
         JSON.stringify({ error: "Missing or invalid authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -28,21 +29,26 @@ serve(async (req) => {
     }
 
     const token = authHeader.split("Bearer ")[1];
+    console.log("Received token:", token.substring(0, 10) + "...");
     
     // Create a Supabase client using the service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Verify the token and get the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
+    const { data, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !data || !data.user) {
       console.error("Authentication error:", authError);
       return new Response(
         JSON.stringify({ error: "Unauthorized", details: authError }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    const user = data.user;
+    console.log("Authenticated user:", user.id);
 
+    const requestBody = await req.json();
     const {
       source,
       destination,
@@ -51,7 +57,7 @@ serve(async (req) => {
       budget,
       travelers,
       interests
-    } = await req.json();
+    } = requestBody;
 
     // Validate required inputs
     if (!source || !destination || !startDate || !endDate || !budget || !travelers) {
@@ -131,14 +137,14 @@ serve(async (req) => {
       }),
     });
 
-    const data = await response.json();
+    const data2 = await response.json();
     console.log("Received response from Gemini API");
 
     // Extract the response text from Gemini
     let aiResponse;
     try {
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        const responseText = data.candidates[0].content.parts[0].text;
+      if (data2.candidates && data2.candidates[0] && data2.candidates[0].content && data2.candidates[0].content.parts) {
+        const responseText = data2.candidates[0].content.parts[0].text;
         
         // Parse the JSON response
         const startJson = responseText.indexOf("{");
@@ -152,12 +158,12 @@ serve(async (req) => {
           aiResponse = { summary: responseText };
         }
       } else {
-        console.error("Unexpected API response structure:", data);
+        console.error("Unexpected API response structure:", data2);
         aiResponse = { error: "Failed to parse API response" };
       }
     } catch (error) {
       console.error("Error parsing Gemini response:", error);
-      aiResponse = { error: "Failed to parse Gemini response", rawResponse: data };
+      aiResponse = { error: "Failed to parse Gemini response", rawResponse: data2 };
     }
 
     // Store the trip plan in the database
