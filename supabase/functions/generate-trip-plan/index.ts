@@ -18,14 +18,27 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: { user } } = await supabase.auth.getUser(
-      req.headers.get("Authorization")?.split("Bearer ")[1] || ""
-    );
-
-    if (!user) {
+    // Extract the JWT token from the Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Missing or invalid authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    
+    // Create a Supabase client using the service role key
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Verify the token and get the user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error("Authentication error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: authError }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -85,6 +98,14 @@ serve(async (req) => {
       "tips": ["...", "..."]
     }
     `;
+
+    if (!googleApiKey) {
+      console.error("Missing GOOGLE_AI_API_KEY");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing API key" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Call the Gemini API
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {

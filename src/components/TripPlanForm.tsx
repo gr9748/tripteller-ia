@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const TripPlanForm: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -36,7 +36,7 @@ const TripPlanForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast.error('Please sign in to create a trip plan');
       navigate('/login');
       return;
@@ -52,6 +52,16 @@ const TripPlanForm: React.FC = () => {
       setIsSubmitting(true);
       toast.info('Generating your personalized trip plan...');
       
+      // Get the user's session for authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      
+      if (!token) {
+        toast.error('Authentication error. Please sign in again.');
+        navigate('/login');
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-trip-plan', {
         body: {
           source: formData.source,
@@ -61,6 +71,9 @@ const TripPlanForm: React.FC = () => {
           budget: parseFloat(formData.budget),
           travelers: parseInt(formData.travelers),
           interests: formData.interests
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
         }
       });
       
@@ -71,7 +84,6 @@ const TripPlanForm: React.FC = () => {
       }
       
       toast.success('Trip plan generated successfully!');
-      // Could navigate to a trip details page in the future
       console.log('Trip plan generated:', data);
       
       // Reset form
