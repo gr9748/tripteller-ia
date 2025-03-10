@@ -15,7 +15,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (sessionData.session) {
-          // If we have a valid session, use stored user data
+          // If we have a valid session, use stored user data or fetch it
           const storedUser = localStorage.getItem('user');
           if (storedUser) {
             setUser(JSON.parse(storedUser));
@@ -70,11 +70,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('user');
         setUser(null);
       } else if (event === 'SIGNED_IN' && session) {
-        // Update user data if signed in
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        }
+        // Get user data when signed in
+        const userData = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.email ? session.user.email.split('@')[0] : 'User',
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
       }
     });
 
@@ -83,25 +86,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // For demonstration purposes - in a real app, you'd integrate with a real auth system
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mocked successful login
-      const mockUser = {
-        id: '1',
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        name: email.split('@')[0],
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      toast.success('Successfully logged in');
-      navigate('/');
+        password,
+      });
+
+      if (error) {
+        console.error('Login error:', error.message);
+        toast.error(error.message || 'Login failed');
+        throw error;
+      }
+
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.email ? data.user.email.split('@')[0] : 'User',
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        toast.success('Successfully logged in');
+        navigate('/');
+      }
     } catch (error) {
+      console.error('Login process error:', error);
       toast.error('Login failed');
       throw error;
     } finally {
@@ -112,21 +123,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mocked successful signup
-      const mockUser = {
-        id: '1',
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      toast.success('Account created successfully');
-      navigate('/');
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+
+      if (error) {
+        console.error('Signup error:', error.message);
+        toast.error(error.message || 'Signup failed');
+        throw error;
+      }
+
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: name || (data.user.email ? data.user.email.split('@')[0] : 'User'),
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        toast.success('Account created successfully');
+        navigate('/');
+      }
     } catch (error) {
+      console.error('Signup process error:', error);
       toast.error('Signup failed');
       throw error;
     } finally {
@@ -134,11 +159,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Logged out successfully');
-    navigate('/login');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error.message);
+        toast.error(error.message || 'Logout failed');
+        return;
+      }
+      
+      localStorage.removeItem('user');
+      setUser(null);
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout process error:', error);
+      toast.error('Logout failed');
+    }
   };
 
   const value = {
