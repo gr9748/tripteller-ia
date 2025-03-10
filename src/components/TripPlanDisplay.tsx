@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -53,6 +52,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
     activities
   } = tripPlan.ai_response;
 
+  const tipsArray = Array.isArray(tips) ? tips : [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -91,7 +92,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
           
           <Accordion type="single" collapsible className="w-full">
             {/* Fun Activities Section */}
-            {(activities && activities.length > 0) && (
+            {(activities && Array.isArray(activities) && activities.length > 0) && (
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center">
@@ -103,7 +104,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
                   <div className="space-y-3 pl-7">
                     {activities.map((activity: any, index: number) => (
                       <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">{activity.name || activity}</p>
+                        <p className="font-medium">{typeof activity === 'string' ? activity : activity.name}</p>
                         {activity.description && (
                           <p className="text-sm text-muted-foreground">{activity.description}</p>
                         )}
@@ -118,7 +119,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
             )}
 
             {/* Extract fun activities from attractions if activities array doesn't exist */}
-            {(!activities || activities.length === 0) && attractions && attractions.length > 0 && (
+            {(!activities || !Array.isArray(activities) || activities.length === 0) && attractions && Array.isArray(attractions) && attractions.length > 0 && (
               <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center">
@@ -130,16 +131,18 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
                   <div className="space-y-3 pl-7">
                     {attractions
                       .filter((attraction: any) => 
-                        attraction.name.toLowerCase().includes('adventure') || 
-                        attraction.name.toLowerCase().includes('fun') ||
-                        attraction.name.toLowerCase().includes('tour') ||
-                        attraction.name.toLowerCase().includes('experience') ||
-                        (attraction.description && (
-                          attraction.description.toLowerCase().includes('adventure') ||
-                          attraction.description.toLowerCase().includes('fun') ||
-                          attraction.description.toLowerCase().includes('entertainment') ||
-                          attraction.description.toLowerCase().includes('activity')
-                        ))
+                        typeof attraction.name === 'string' && (
+                          attraction.name.toLowerCase().includes('adventure') || 
+                          attraction.name.toLowerCase().includes('fun') ||
+                          attraction.name.toLowerCase().includes('tour') ||
+                          attraction.name.toLowerCase().includes('experience') ||
+                          (typeof attraction.description === 'string' && (
+                            attraction.description.toLowerCase().includes('adventure') ||
+                            attraction.description.toLowerCase().includes('fun') ||
+                            attraction.description.toLowerCase().includes('entertainment') ||
+                            attraction.description.toLowerCase().includes('activity')
+                          ))
+                        )
                       )
                       .map((activity: any, index: number) => (
                         <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
@@ -338,7 +341,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
               </AccordionItem>
             )}
             
-            {tips && tips.length > 0 && (
+            {tipsArray.length > 0 && (
               <AccordionItem value="tips">
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center">
@@ -349,7 +352,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
                 <AccordionContent>
                   <div className="pl-7">
                     <ul className="list-disc list-outside space-y-2 ml-4">
-                      {tips.map((tip: string, index: number) => (
+                      {tipsArray.map((tip: string, index: number) => (
                         <li key={index} className="text-sm">{tip}</li>
                       ))}
                     </ul>
