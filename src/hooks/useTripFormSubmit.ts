@@ -6,10 +6,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { TripFormData } from './useTripFormState';
 
+export interface TripPlan {
+  id: string;
+  user_id: string;
+  source: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  budget: number;
+  travelers: number;
+  interests: string | null;
+  ai_response: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useTripFormSubmit = (resetForm: () => void) => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedTripPlan, setGeneratedTripPlan] = useState<TripPlan | null>(null);
   
   // Check authentication status before allowing submission
   useEffect(() => {
@@ -95,6 +111,11 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       toast.success('Trip plan generated successfully!');
       console.log('Trip plan generated:', data);
       
+      // Store the generated trip plan
+      if (data?.tripPlan) {
+        setGeneratedTripPlan(data.tripPlan);
+      }
+      
       // Reset form
       resetForm();
       
@@ -108,6 +129,7 @@ export const useTripFormSubmit = (resetForm: () => void) => {
 
   return {
     isSubmitting,
-    submitTripPlan
+    submitTripPlan,
+    generatedTripPlan
   };
 };
