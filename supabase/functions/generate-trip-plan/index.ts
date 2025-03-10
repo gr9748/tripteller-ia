@@ -90,6 +90,7 @@ serve(async (req) => {
     6. A day-by-day itinerary
     7. Budget breakdown for the entire trip
     8. Travel tips specific to ${destination}
+    9. Fun activities and entertainment options for travelers
 
     Format your response as a JSON object with the following structure:
     {
@@ -101,7 +102,8 @@ serve(async (req) => {
       "transportation": [{"type": "...", "cost": "..."}],
       "itinerary": [{"day": 1, "activities": ["...", "..."], "meals": ["...", "..."], "notes": "..."}],
       "budgetBreakdown": {"flights": "...", "accommodations": "...", "food": "...", "activities": "...", "transportation": "...", "total": "..."},
-      "tips": ["...", "..."]
+      "tips": ["...", "..."],
+      "activities": [{"name": "...", "description": "...", "cost": "..."}]
     }
     `;
 

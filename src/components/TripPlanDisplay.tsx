@@ -26,7 +26,8 @@ import {
   MapIcon, 
   Bus, 
   CalendarDays, 
-  LightbulbIcon 
+  LightbulbIcon,
+  Smile
 } from 'lucide-react';
 import { TripPlan } from '@/hooks/useTripFormSubmit';
 
@@ -48,7 +49,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
     transportation,
     itinerary,
     budgetBreakdown,
-    tips
+    tips,
+    activities
   } = tripPlan.ai_response;
 
   return (
@@ -88,6 +90,70 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan }) => {
           )}
           
           <Accordion type="single" collapsible className="w-full">
+            {/* Fun Activities Section */}
+            {(activities && activities.length > 0) && (
+              <AccordionItem value="activities" className="border-b-2 border-primary/10">
+                <AccordionTrigger className="py-4">
+                  <div className="flex items-center">
+                    <Smile className="h-5 w-5 mr-2 text-primary" />
+                    <span className="font-semibold">Fun Activities</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pl-7">
+                    {activities.map((activity: any, index: number) => (
+                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
+                        <p className="font-medium">{activity.name || activity}</p>
+                        {activity.description && (
+                          <p className="text-sm text-muted-foreground">{activity.description}</p>
+                        )}
+                        {activity.cost && (
+                          <p className="text-xs mt-1">Cost: {activity.cost}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
+            {/* Extract fun activities from attractions if activities array doesn't exist */}
+            {(!activities || activities.length === 0) && attractions && attractions.length > 0 && (
+              <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
+                <AccordionTrigger className="py-4">
+                  <div className="flex items-center">
+                    <Smile className="h-5 w-5 mr-2 text-primary" />
+                    <span className="font-semibold">Fun Activities</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pl-7">
+                    {attractions
+                      .filter((attraction: any) => 
+                        attraction.name.toLowerCase().includes('adventure') || 
+                        attraction.name.toLowerCase().includes('fun') ||
+                        attraction.name.toLowerCase().includes('tour') ||
+                        attraction.name.toLowerCase().includes('experience') ||
+                        (attraction.description && (
+                          attraction.description.toLowerCase().includes('adventure') ||
+                          attraction.description.toLowerCase().includes('fun') ||
+                          attraction.description.toLowerCase().includes('entertainment') ||
+                          attraction.description.toLowerCase().includes('activity')
+                        ))
+                      )
+                      .map((activity: any, index: number) => (
+                        <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
+                          <p className="font-medium">{activity.name}</p>
+                          <p className="text-sm text-muted-foreground">{activity.description}</p>
+                          <p className="text-xs mt-1">Cost: {activity.estimatedCost}</p>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+            
             {flights && flights.length > 0 && (
               <AccordionItem value="flights">
                 <AccordionTrigger className="py-4">
