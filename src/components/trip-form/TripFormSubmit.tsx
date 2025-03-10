@@ -3,18 +3,22 @@ import React from 'react';
 import { Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardFooter } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 
 interface TripFormSubmitProps {
   isSubmitting: boolean;
 }
 
 export const TripFormSubmit: React.FC<TripFormSubmitProps> = ({ isSubmitting }) => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <CardFooter className="px-0 pb-0 pt-2">
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isAuthenticated}
+        title={!isAuthenticated ? "Please sign in first" : ""}
       >
         {isSubmitting ? (
           <>
