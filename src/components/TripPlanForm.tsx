@@ -37,8 +37,19 @@ const TripPlanForm: React.FC = () => {
     resetForm();
   };
 
+  // Get a random travel background image
+  const backgroundImage = `https://source.unsplash.com/1600x900/?travel,vacation,${formData.destination || 'adventure'}`;
+
   return (
     <div className="w-full max-w-3xl mx-auto">
+      {/* Background image for the form */}
+      {showForm && (
+        <div 
+          className="absolute top-0 left-0 w-full h-full -z-10 opacity-15 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        />
+      )}
+      
       {generatedTripPlan && !showForm && (
         <TripPlanDisplay 
           tripPlan={generatedTripPlan} 
@@ -53,7 +64,7 @@ const TripPlanForm: React.FC = () => {
           transition={{ duration: 0.4 }}
           className="w-full"
         >
-          <Card className="glass">
+          <Card className="glass backdrop-blur-sm bg-white/75 border shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">
                 Plan Your Perfect Trip
