@@ -40,9 +40,17 @@ const TripPlanForm: React.FC = () => {
     resetForm();
   };
 
-  // Get a random travel background image
-  const backgroundImage = `https://source.unsplash.com/1600x900/?travel,vacation,${formData.destination || 'adventure'}`;
-  const heroImage = `https://source.unsplash.com/1600x400/?${formData.destination || 'paris,travel,landscape'}`;
+  // Get a Google Maps Static image for the background
+  const getGoogleMapImage = (location: string, width = 1600, height = 900, zoom = 12) => {
+    // Format the location for the URL
+    const formattedLocation = encodeURIComponent(location || 'world');
+    
+    // Create the Google Maps Static API URL
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${formattedLocation}&zoom=${zoom}&size=${width}x${height}&maptype=roadmap&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE`;
+  };
+  
+  const backgroundImage = getGoogleMapImage(formData.destination, 1600, 900, 10);
+  const heroImage = getGoogleMapImage(formData.destination, 1600, 400, 12);
 
   // Debug logs to understand what's happening with the generated trip plan
   console.log("Current generatedTripPlan:", generatedTripPlan);
@@ -58,7 +66,7 @@ const TripPlanForm: React.FC = () => {
           className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = "https://source.unsplash.com/1600x400/?travel,landscape";
+            target.src = "https://maps.googleapis.com/maps/api/staticmap?center=world&zoom=2&size=1600x400&maptype=roadmap&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE";
             console.log("Hero image failed to load, using fallback");
           }}
         />

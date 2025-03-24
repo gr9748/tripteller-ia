@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,7 +11,7 @@ import {
   ArrowLeft,
   MapPin,
   Navigation,
-  Sparkles // Using Sparkles instead of Party which doesn't exist
+  Sparkles
 } from 'lucide-react';
 import { 
   Accordion,
@@ -48,9 +47,9 @@ const getLocationQueryParam = (location: string) => {
   return encodeURIComponent(location);
 };
 
-const getRandomImageForLocation = (location: string, size = '600x400') => {
-  // Use Unsplash source for random location-based images
-  return `https://source.unsplash.com/${size}/?${encodeURIComponent(location.replace(/[^\w\s]/gi, ''))}`;
+const getGoogleMapImageForLocation = (location: string, width = 600, height = 400, zoom = 13) => {
+  const formattedLocation = encodeURIComponent(location.replace(/[^\w\s]/gi, ''));
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${formattedLocation}&zoom=${zoom}&size=${width}x${height}&maptype=roadmap&markers=color:red%7C${formattedLocation}&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE`;
 };
 
 const NavigationButton = ({ location }: { location: string }) => {
@@ -75,14 +74,25 @@ const NavigationButton = ({ location }: { location: string }) => {
 };
 
 const LocationImage = ({ location, alt, className }: { location: string, alt: string, className?: string }) => {
-  const [imageSrc, setImageSrc] = useState(getRandomImageForLocation(location));
+  const [imageSrc, setImageSrc] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  // Retry with a different image if loading fails
+  useEffect(() => {
+    if (!location) return;
+    
+    setIsLoading(true);
+    setHasError(false);
+    
+    const imageUrl = getGoogleMapImageForLocation(location);
+    setImageSrc(imageUrl);
+  }, [location]);
+
   const handleError = () => {
     setHasError(true);
-    setImageSrc(getRandomImageForLocation(location, '600x400')); // Try a different random image
+    const imageUrl = getGoogleMapImageForLocation(location, 600, 400, 10);
+    setImageSrc(imageUrl);
+    console.log("Image loading failed, trying with different zoom level", location);
   };
 
   return (
@@ -92,16 +102,18 @@ const LocationImage = ({ location, alt, className }: { location: string, alt: st
           <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
-      <img
-        src={imageSrc}
-        alt={alt}
-        className={cn(
-          "w-full h-auto object-cover transition-opacity duration-300",
-          isLoading ? "opacity-0" : "opacity-100"
-        )}
-        onLoad={() => setIsLoading(false)}
-        onError={handleError}
-      />
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          alt={alt}
+          className={cn(
+            "w-full h-auto object-cover transition-opacity duration-300",
+            isLoading ? "opacity-0" : "opacity-100"
+          )}
+          onLoad={() => setIsLoading(false)}
+          onError={handleError}
+        />
+      )}
     </div>
   );
 };
@@ -129,13 +141,11 @@ const LiveLocationButton = () => {
           { enableHighAccuracy: true }
         );
         
-        // Store the watchId in localStorage to persist across renders
         localStorage.setItem('locationWatchId', watchId.toString());
       } else {
         toast.error('Geolocation is not supported by your browser');
       }
     } else {
-      // Clear the watch when stopping tracking
       const watchId = localStorage.getItem('locationWatchId');
       if (watchId) {
         navigator.geolocation.clearWatch(parseInt(watchId));
@@ -158,14 +168,12 @@ const LiveLocationButton = () => {
     window.open(googleMapsUrl, '_blank');
   };
   
-  // Check if there was a previous tracking session on component mount
   useEffect(() => {
     const watchId = localStorage.getItem('locationWatchId');
     if (watchId) {
       setIsTracking(true);
     }
     
-    // Clean up on unmount
     return () => {
       const storedWatchId = localStorage.getItem('locationWatchId');
       if (storedWatchId) {
@@ -233,16 +241,14 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
         </h2>
       </div>
       
-      {/* Destination Image Banner */}
       <div className="mb-6 overflow-hidden rounded-lg">
         <LocationImage 
           location={tripPlan.destination}
-          alt={`Scenic view of ${tripPlan.destination}`}
+          alt={`Map of ${tripPlan.destination}`}
           className="h-48 md:h-64"
         />
       </div>
 
-      {/* Live Location Tracking */}
       <LiveLocationButton />
       
       <ScrollArea className="h-[calc(100vh-430px)] pr-4 -mr-4 mt-4">
@@ -254,7 +260,6 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
           )}
           
           <Accordion type="single" collapsible className="w-full">
-            {/* Fun Activities Section */}
             {(activities && Array.isArray(activities) && activities.length > 0) && (
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
@@ -278,7 +283,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           <LocationImage 
                             location={activityName}
-                            alt={`Image of ${activityName}`}
+                            alt={`Map of ${activityName}`}
                           />
                           <NavigationButton location={activityName} />
                         </div>
@@ -289,7 +294,6 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
 
-            {/* Extract fun activities from attractions if activities array doesn't exist */}
             {(!activities || !Array.isArray(activities) || activities.length === 0) && attractions && Array.isArray(attractions) && attractions.length > 0 && (
               <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
@@ -326,7 +330,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           <LocationImage 
                             location={activity.name}
-                            alt={`Image of ${activity.name}`}
+                            alt={`Map of ${activity.name}`}
                           />
                           <NavigationButton location={activity.name} />
                         </div>
@@ -491,11 +495,10 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                       <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
                         <p className="font-medium">Day {day.day}</p>
                         
-                        {/* Show a representative image for the day's activities */}
                         {Array.isArray(day.activities) && day.activities.length > 0 && (
                           <LocationImage 
                             location={typeof day.activities[0] === 'string' ? day.activities[0] : (day.activities[0]?.name || `Day ${day.day} activities`)}
-                            alt={`Day ${day.day} activities`}
+                            alt={`Map of Day ${day.day} activities`}
                           />
                         )}
                         
