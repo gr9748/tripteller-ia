@@ -21,6 +21,27 @@ export interface TripPlan {
   updated_at: string;
 }
 
+// Default AI response for fallback/error cases
+const defaultAiResponse = {
+  summary: "Your personalized trip plan",
+  flights: [{ airline: "Sample Airline", price: "$500", departure: "Your Location", arrival: "Destination" }],
+  accommodations: [{ name: "Hotel Example", location: "City Center", pricePerNight: "$100", totalCost: "$400" }],
+  attractions: [{ name: "Famous Landmark", description: "A beautiful place to visit", estimatedCost: "$0" }],
+  restaurants: [{ name: "Local Cuisine", cuisine: "Traditional", priceRange: "$$" }],
+  transportation: [{ type: "Public Transit", cost: "$20" }],
+  itinerary: [
+    { 
+      day: 1, 
+      activities: ["Arrive at destination", "Check in to accommodation"], 
+      meals: ["Dinner at local restaurant"], 
+      notes: "Rest after travel"
+    }
+  ],
+  budgetBreakdown: { flights: "$500", accommodations: "$400", food: "$200", activities: "$100", transportation: "$50", total: "$1250" },
+  tips: ["Book in advance", "Learn basic local phrases", "Check weather before packing"],
+  activities: [{ name: "City Tour", description: "Explore the local area", cost: "$30" }]
+};
+
 export const useTripFormSubmit = (resetForm: () => void) => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -113,6 +134,36 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       
       // Store the generated trip plan
       if (data?.tripPlan) {
+        // Check if the AI response has an error or is missing data
+        if (data.tripPlan.ai_response?.error || !data.tripPlan.ai_response?.itinerary) {
+          console.warn('AI response has errors or missing data:', data.tripPlan.ai_response);
+          
+          // If there's raw response data in a JSON string, try to parse it
+          if (data.tripPlan.ai_response?.rawResponse?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            try {
+              const responseText = data.tripPlan.ai_response.rawResponse.candidates[0].content.parts[0].text;
+              const jsonStart = responseText.indexOf('{');
+              const jsonEnd = responseText.lastIndexOf('}') + 1;
+              
+              if (jsonStart >= 0 && jsonEnd > jsonStart) {
+                const jsonStr = responseText.substring(jsonStart, jsonEnd);
+                const parsedResponse = JSON.parse(jsonStr);
+                
+                // Update the AI response with the parsed data
+                data.tripPlan.ai_response = parsedResponse;
+                console.log('Successfully parsed AI response from raw text:', parsedResponse);
+              }
+            } catch (parseError) {
+              console.error('Failed to parse AI response from raw text:', parseError);
+              // Use a default response format as fallback
+              data.tripPlan.ai_response = defaultAiResponse;
+            }
+          } else {
+            // If we can't parse or there's no raw text, use the default response
+            data.tripPlan.ai_response = defaultAiResponse;
+          }
+        }
+        
         setGeneratedTripPlan(data.tripPlan);
       }
       

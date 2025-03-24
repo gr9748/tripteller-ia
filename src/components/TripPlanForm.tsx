@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,14 @@ const TripPlanForm: React.FC = () => {
   const { isSubmitting, submitTripPlan, generatedTripPlan } = useTripFormSubmit(resetForm);
   const [showForm, setShowForm] = useState(true);
 
+  useEffect(() => {
+    // When generatedTripPlan changes and is valid, hide the form
+    if (generatedTripPlan) {
+      console.log("Trip plan generated successfully, hiding form", generatedTripPlan);
+      setShowForm(false);
+    }
+  }, [generatedTripPlan]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -25,11 +33,6 @@ const TripPlanForm: React.FC = () => {
     }
     
     await submitTripPlan(formData);
-    
-    if (generatedTripPlan) {
-      console.log("Trip plan generated successfully, hiding form", generatedTripPlan);
-      setShowForm(false);
-    }
   };
 
   const handleCreateNew = () => {
@@ -41,6 +44,10 @@ const TripPlanForm: React.FC = () => {
   const backgroundImage = `https://source.unsplash.com/1600x900/?travel,vacation,${formData.destination || 'adventure'}`;
   const heroImage = `https://source.unsplash.com/1600x400/?${formData.destination || 'paris,travel,landscape'}`;
 
+  // Debug logs to understand what's happening with the generated trip plan
+  console.log("Current generatedTripPlan:", generatedTripPlan);
+  console.log("showForm state:", showForm);
+  
   return (
     <div className="w-full max-w-3xl mx-auto">
       {/* Hero image at the top */}
@@ -49,6 +56,11 @@ const TripPlanForm: React.FC = () => {
           src={heroImage} 
           alt="Travel destination" 
           className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "https://source.unsplash.com/1600x400/?travel,landscape";
+            console.log("Hero image failed to load, using fallback");
+          }}
         />
       </div>
       
@@ -63,7 +75,7 @@ const TripPlanForm: React.FC = () => {
       {generatedTripPlan && !showForm ? (
         <TripPlanDisplay 
           tripPlan={generatedTripPlan} 
-          onBack={() => setShowForm(true)}
+          onBack={handleCreateNew}
         />
       ) : (
         <motion.div
