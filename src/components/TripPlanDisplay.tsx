@@ -9,7 +9,8 @@ import {
   Calendar,
   DollarSign,
   Info,
-  ArrowLeft
+  ArrowLeft,
+  Sparkles // Using Sparkles instead of Party which doesn't exist
 } from 'lucide-react';
 import { 
   Accordion,
@@ -19,7 +20,6 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Party } from 'lucide-react';
 
 interface TripPlanDisplayProps {
   tripPlan: {
@@ -90,7 +90,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center">
-                    <Party className="mr-2 h-5 w-5 text-primary" />
+                    <Sparkles className="mr-2 h-5 w-5 text-primary" />
                     <span>Fun Activities</span>
                   </div>
                 </AccordionTrigger>
@@ -117,7 +117,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4">
                   <div className="flex items-center">
-                    <Party className="mr-2 h-5 w-5 text-primary" />
+                    <Sparkles className="mr-2 h-5 w-5 text-primary" />
                     <span>Fun Activities</span>
                   </div>
                 </AccordionTrigger>

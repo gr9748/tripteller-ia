@@ -39,22 +39,11 @@ const TripPlanForm: React.FC = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      {generatedTripPlan && (
-        <>
-          <TripPlanDisplay tripPlan={generatedTripPlan} />
-          
-          <div className="flex justify-center mb-8">
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary"
-              onClick={handleCreateNew}
-            >
-              Create Another Trip Plan
-            </motion.button>
-          </div>
-        </>
+      {generatedTripPlan && !showForm && (
+        <TripPlanDisplay 
+          tripPlan={generatedTripPlan} 
+          onBack={() => setShowForm(true)}
+        />
       )}
       
       {showForm && (
@@ -97,6 +86,20 @@ const TripPlanForm: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
+      )}
+      
+      {generatedTripPlan && !showForm && (
+        <div className="flex justify-center mt-6 mb-8">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary"
+            onClick={handleCreateNew}
+          >
+            Create Another Trip Plan
+          </motion.button>
+        </div>
       )}
     </div>
   );
