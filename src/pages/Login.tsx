@@ -45,8 +45,17 @@ const Login: React.FC = () => {
     }
   };
 
+  // Get a random travel background image
+  const backgroundImage = `https://source.unsplash.com/1600x900/?travel,vacation,resort,adventure`;
+
   return (
-    <PageTransition className="flex min-h-screen items-center justify-center px-4 py-12">
+    <PageTransition className="flex min-h-screen items-center justify-center px-4 py-12 relative">
+      {/* Background image */}
+      <div 
+        className="absolute top-0 left-0 w-full h-full -z-10 opacity-30 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
+      
       <div className="w-full max-w-md">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -67,7 +76,7 @@ const Login: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <Card className="glass">
+          <Card className="glass backdrop-blur-sm bg-white/90">
             <CardHeader>
               <CardTitle>Login</CardTitle>
               <CardDescription>
@@ -92,7 +101,7 @@ const Login: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
                     <Link 
-                      to="#" 
+                      to="/forgot-password" 
                       className="text-sm text-primary hover:underline"
                     >
                       Forgot password?

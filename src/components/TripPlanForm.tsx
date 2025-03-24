@@ -26,8 +26,8 @@ const TripPlanForm: React.FC = () => {
     
     await submitTripPlan(formData);
     
-    // If trip plan was generated successfully, hide the form to focus on the result
     if (generatedTripPlan) {
+      console.log("Trip plan generated successfully, hiding form", generatedTripPlan);
       setShowForm(false);
     }
   };
@@ -39,9 +39,19 @@ const TripPlanForm: React.FC = () => {
 
   // Get a random travel background image
   const backgroundImage = `https://source.unsplash.com/1600x900/?travel,vacation,${formData.destination || 'adventure'}`;
+  const heroImage = `https://source.unsplash.com/1600x400/?${formData.destination || 'paris,travel,landscape'}`;
 
   return (
     <div className="w-full max-w-3xl mx-auto">
+      {/* Hero image at the top */}
+      <div className="w-full h-48 mb-6 overflow-hidden rounded-lg shadow-md">
+        <img 
+          src={heroImage} 
+          alt="Travel destination" 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      
       {/* Background image for the form */}
       {showForm && (
         <div 
@@ -50,14 +60,12 @@ const TripPlanForm: React.FC = () => {
         />
       )}
       
-      {generatedTripPlan && !showForm && (
+      {generatedTripPlan && !showForm ? (
         <TripPlanDisplay 
           tripPlan={generatedTripPlan} 
           onBack={() => setShowForm(true)}
         />
-      )}
-      
-      {showForm && (
+      ) : (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
