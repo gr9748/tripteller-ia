@@ -10,13 +10,12 @@ import { TripFormDates } from './trip-form/TripFormDates';
 import { TripFormDetails } from './trip-form/TripFormDetails';
 import { TripFormSubmit } from './trip-form/TripFormSubmit';
 import TripPlanDisplay from './TripPlanDisplay';
+import { Globe, Sparkles } from 'lucide-react';
 
 const TripPlanForm: React.FC = () => {
   const { formData, handleChange, resetForm, validateForm } = useTripFormState();
   const { isSubmitting, submitTripPlan, generatedTripPlan } = useTripFormSubmit(resetForm);
   const [showForm, setShowForm] = useState(true);
-  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
-  const [heroImageError, setHeroImageError] = useState(false);
 
   useEffect(() => {
     // When generatedTripPlan changes and is valid, hide the form
@@ -40,51 +39,32 @@ const TripPlanForm: React.FC = () => {
   const handleCreateNew = () => {
     setShowForm(true);
     resetForm();
-    setHeroImageLoaded(false);
-    setHeroImageError(false);
   };
-
-  // Get a Google Maps Static image for the background
-  const getGoogleMapImage = (location: string, width = 1600, height = 900, zoom = 12) => {
-    // Format the location for the URL
-    const formattedLocation = encodeURIComponent(location || 'world');
-    
-    // Create the Google Maps Static API URL
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${formattedLocation}&zoom=${zoom}&size=${width}x${height}&maptype=roadmap&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE`;
-  };
-  
-  const backgroundImage = getGoogleMapImage(formData.destination, 1600, 900, 10);
-  const heroImage = getGoogleMapImage(formData.destination, 1600, 400, 12);
   
   return (
     <div className="w-full max-w-3xl mx-auto">
-      {/* Hero image at the top */}
-      <div className="w-full h-48 mb-6 overflow-hidden rounded-lg shadow-md">
-        {!heroImageLoaded && !heroImageError && (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      {/* Top banner with decorative elements */}
+      <div className="w-full mb-6 overflow-hidden rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/20 p-2 rounded-full">
+              <Globe className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Plan Your Journey</h2>
+              <p className="text-blue-100 text-sm">Create unforgettable travel experiences</p>
+            </div>
           </div>
-        )}
-        <img 
-          src={heroImage} 
-          alt="Travel destination" 
-          className={`w-full h-full object-cover transition-opacity duration-300 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setHeroImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            setHeroImageError(true);
-            target.src = "https://maps.googleapis.com/maps/api/staticmap?center=world&zoom=2&size=1600x400&maptype=roadmap&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE";
-            setHeroImageLoaded(true);
-            console.log("Hero image failed to load, using fallback");
-          }}
-        />
+          <div className="hidden sm:block">
+            <Sparkles className="h-10 w-10 text-yellow-300 animate-pulse" />
+          </div>
+        </div>
       </div>
       
-      {/* Background image for the form */}
+      {/* Decorative background gradient */}
       {showForm && (
         <div 
-          className="absolute top-0 left-0 w-full h-full -z-10 opacity-15 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
+          className="absolute top-0 left-0 w-full h-full -z-10 opacity-15 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20"
         />
       )}
       
@@ -100,9 +80,9 @@ const TripPlanForm: React.FC = () => {
           transition={{ duration: 0.4 }}
           className="w-full"
         >
-          <Card className="glass backdrop-blur-sm bg-white/75 border shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-center">
+          <Card className="backdrop-blur-sm bg-gradient-to-br from-white/90 to-blue-50/90 border border-blue-100 shadow-lg dark:from-slate-900/90 dark:to-blue-900/30 dark:border-blue-900/40">
+            <CardHeader className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 rounded-t-lg border-b border-blue-100 dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-900/40">
+              <CardTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400">
                 Plan Your Perfect Trip
               </CardTitle>
             </CardHeader>
@@ -141,7 +121,7 @@ const TripPlanForm: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary"
+            className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-sm"
             onClick={handleCreateNew}
           >
             Create Another Trip Plan

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -47,11 +48,6 @@ const getLocationQueryParam = (location: string) => {
   return encodeURIComponent(location);
 };
 
-const getGoogleMapImageForLocation = (location: string, width = 600, height = 400, zoom = 13) => {
-  const formattedLocation = encodeURIComponent(location.replace(/[^\w\s]/gi, ''));
-  return `https://maps.googleapis.com/maps/api/staticmap?center=${formattedLocation}&zoom=${zoom}&size=${width}x${height}&maptype=roadmap&markers=color:red%7C${formattedLocation}&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE`;
-};
-
 const NavigationButton = ({ location }: { location: string }) => {
   if (!location) return null;
   
@@ -64,86 +60,12 @@ const NavigationButton = ({ location }: { location: string }) => {
     <Button 
       variant="outline" 
       size="sm" 
-      className="mt-2 text-xs h-7 px-2"
+      className="mt-2 text-xs h-7 px-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
       onClick={handleNavigate}
     >
       <MapPin className="h-3 w-3 mr-1" />
       Navigate
     </Button>
-  );
-};
-
-const LocationImage = ({ location, alt, className }: { location: string, alt: string, className?: string }) => {
-  const [imageSrc, setImageSrc] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    if (!location) return;
-    
-    setIsLoading(true);
-    setHasError(false);
-    
-    const imageUrl = getGoogleMapImageForLocation(location);
-    setImageSrc(imageUrl);
-  }, [location]);
-
-  const handleError = () => {
-    setHasError(true);
-    const imageUrl = getGoogleMapImageForLocation(location, 600, 400, 10);
-    setImageSrc(imageUrl);
-    console.log("Image loading failed, trying with different zoom level", location);
-  };
-
-  return (
-    <div className={cn("relative overflow-hidden rounded-md mt-2", className)}>
-      {isLoading && !hasError && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-      {imageSrc && (
-        <img
-          src={imageSrc}
-          alt={alt}
-          className={cn(
-            "w-full h-auto object-cover transition-opacity duration-300",
-            isLoading ? "opacity-0" : "opacity-100"
-          )}
-          onLoad={() => setIsLoading(false)}
-          onError={handleError}
-        />
-      )}
-    </div>
-  );
-};
-
-const LiveLocationMap = ({ location, currentLocation }: { location: string, currentLocation?: GeolocationPosition | null }) => {
-  const mapUrl = getGoogleMapImageForLocation(
-    location,
-    600,
-    400,
-    13
-  );
-  
-  return (
-    <div className="mt-4 mb-4 overflow-hidden rounded-lg shadow-md">
-      <img 
-        src={mapUrl} 
-        alt={`Map of ${location}`}
-        className="w-full h-auto object-cover"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.src = getGoogleMapImageForLocation("world", 600, 400, 1);
-          console.log("Map failed to load, using fallback");
-        }}
-      />
-      {currentLocation && (
-        <div className="bg-background/80 backdrop-blur-sm text-sm p-2 border-t">
-          <p>Your location: {currentLocation.coords.latitude.toFixed(5)}, {currentLocation.coords.longitude.toFixed(5)}</p>
-        </div>
-      )}
-    </div>
   );
 };
 
@@ -213,19 +135,12 @@ const LiveLocationButton = ({ destination }: { destination: string }) => {
   
   return (
     <div className="space-y-2">
-      {isTracking && currentLocation && (
-        <LiveLocationMap 
-          location={destination} 
-          currentLocation={currentLocation} 
-        />
-      )}
-      
       <div className="flex flex-col sm:flex-row gap-2">
         <Button 
           variant={isTracking ? "destructive" : "default"}
           size="sm"
           onClick={toggleLocationTracking}
-          className="flex-1"
+          className={`flex-1 ${!isTracking ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700' : ''}`}
         >
           <Navigation className="h-4 w-4 mr-2" />
           {isTracking ? 'Stop Tracking Location' : 'Start Tracking Location'}
@@ -235,7 +150,7 @@ const LiveLocationButton = ({ destination }: { destination: string }) => {
           <Button
             variant="default"
             size="sm"
-            className="flex-1"
+            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             onClick={() => navigateFromCurrentLocation(destination)}
           >
             <MapPin className="h-4 w-4 mr-2" />
@@ -245,7 +160,7 @@ const LiveLocationButton = ({ destination }: { destination: string }) => {
       </div>
       
       {currentLocation && (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground bg-slate-50 p-2 rounded-md border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
           <p>Current coordinates: {currentLocation.coords.latitude.toFixed(5)}, {currentLocation.coords.longitude.toFixed(5)}</p>
           <p>Accuracy: ±{currentLocation.coords.accuracy.toFixed(1)}m</p>
         </div>
@@ -275,28 +190,39 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 border rounded-lg bg-white/50 backdrop-blur-sm shadow-sm"
+      className="p-4 border rounded-lg bg-gradient-to-br from-slate-50 to-blue-50 backdrop-blur-sm shadow-sm dark:from-slate-900 dark:to-blue-900/30"
     >
       <div className="flex items-center mb-4 gap-2">
         <Button 
           variant="ghost" 
           size="sm"
           onClick={onBack}
-          className="p-0 h-8 w-8"
+          className="p-0 h-8 w-8 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700/50"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
           Trip to {tripPlan.destination}
         </h2>
       </div>
-      
-      <div className="mb-6 overflow-hidden rounded-lg">
-        <LocationImage 
-          location={tripPlan.destination}
-          alt={`Map of ${tripPlan.destination}`}
-          className="h-48 md:h-64"
-        />
+
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg border border-blue-100 dark:border-blue-900">
+        <div className="flex gap-2 items-center mb-2">
+          <MapPin className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+          <h3 className="font-medium text-blue-700 dark:text-blue-300">
+            {tripPlan.destination}
+          </h3>
+        </div>
+        <div className="flex gap-4 text-sm text-slate-600 dark:text-slate-300">
+          <span className="flex items-center gap-1">
+            <Calendar className="h-4 w-4 text-indigo-500" />
+            {tripPlan.start_date} - {tripPlan.end_date}
+          </span>
+          <span className="flex items-center gap-1">
+            <DollarSign className="h-4 w-4 text-green-500" />
+            Budget: ${tripPlan.budget}
+          </span>
+        </div>
       </div>
 
       <LiveLocationButton destination={tripPlan.destination} />
@@ -304,7 +230,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
       <ScrollArea className="h-[calc(100vh-430px)] pr-4 -mr-4 mt-4">
         <div className="space-y-2">
           {summary && (
-            <div className="mb-6 text-muted-foreground">
+            <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 text-slate-700 dark:from-purple-900/20 dark:to-indigo-900/20 dark:text-slate-200 border border-purple-100 dark:border-purple-900/50">
               <p className="leading-relaxed whitespace-pre-line">{summary}</p>
             </div>
           )}
@@ -312,10 +238,12 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
           <Accordion type="single" collapsible className="w-full">
             {(activities && Array.isArray(activities) && activities.length > 0) && (
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Sparkles className="mr-2 h-5 w-5 text-primary" />
-                    <span>Fun Activities</span>
+                    <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-1.5 rounded-full text-white mr-2">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-pink-600 dark:group-hover:text-pink-400">Fun Activities</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -323,18 +251,14 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                     {activities.map((activity: any, index: number) => {
                       const activityName = typeof activity === 'string' ? activity : activity.name;
                       return (
-                        <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                          <p className="font-medium">{activityName}</p>
+                        <div key={index} className="border-l-2 border-pink-300 pl-4 py-2 bg-pink-50/50 rounded-r-lg dark:bg-pink-900/10 dark:border-pink-800">
+                          <p className="font-medium text-pink-700 dark:text-pink-300">{activityName}</p>
                           {activity.description && (
-                            <p className="text-sm text-muted-foreground">{activity.description}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{activity.description}</p>
                           )}
                           {activity.cost && (
-                            <p className="text-sm font-medium mt-1">Cost: {activity.cost}</p>
+                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Cost: {activity.cost}</p>
                           )}
-                          <LocationImage 
-                            location={activityName}
-                            alt={`Map of ${activityName}`}
-                          />
                           <NavigationButton location={activityName} />
                         </div>
                       );
@@ -346,10 +270,12 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
 
             {(!activities || !Array.isArray(activities) || activities.length === 0) && attractions && Array.isArray(attractions) && attractions.length > 0 && (
               <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Sparkles className="mr-2 h-5 w-5 text-primary" />
-                    <span>Fun Activities</span>
+                    <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-1.5 rounded-full text-white mr-2">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-pink-600 dark:group-hover:text-pink-400">Fun Activities</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -370,18 +296,14 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )
                       )
                       .map((activity: any, index: number) => (
-                        <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                          <p className="font-medium">{activity.name}</p>
+                        <div key={index} className="border-l-2 border-pink-300 pl-4 py-2 bg-pink-50/50 rounded-r-lg dark:bg-pink-900/10 dark:border-pink-800">
+                          <p className="font-medium text-pink-700 dark:text-pink-300">{activity.name}</p>
                           {activity.description && (
-                            <p className="text-sm text-muted-foreground">{activity.description}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{activity.description}</p>
                           )}
                           {activity.estimatedCost && (
-                            <p className="text-sm font-medium mt-1">Cost: {activity.estimatedCost}</p>
+                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Cost: {activity.estimatedCost}</p>
                           )}
-                          <LocationImage 
-                            location={activity.name}
-                            alt={`Map of ${activity.name}`}
-                          />
                           <NavigationButton location={activity.name} />
                         </div>
                       ))}
@@ -392,31 +314,33 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {flights && Array.isArray(flights) && flights.length > 0 && (
               <AccordionItem value="flights">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Plane className="mr-2 h-5 w-5 text-primary" />
-                    <span>Flights</span>
+                    <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-1.5 rounded-full text-white mr-2">
+                      <Plane className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-sky-600 dark:group-hover:text-sky-400">Flights</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
                     {flights.map((flight: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">{flight.airline || 'Flight Option ' + (index + 1)}</p>
+                      <div key={index} className="border-l-2 border-sky-300 pl-4 py-2 bg-sky-50/50 rounded-r-lg dark:bg-sky-900/10 dark:border-sky-800">
+                        <p className="font-medium text-sky-700 dark:text-sky-300">{flight.airline || 'Flight Option ' + (index + 1)}</p>
                         {flight.departure && flight.arrival && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-slate-600 dark:text-slate-300">
                             {flight.departure} to {flight.arrival}
                           </p>
                         )}
                         {flight.price && (
-                          <p className="text-sm font-medium mt-1">Price: {flight.price}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Price: {flight.price}</p>
                         )}
                         {flight.departure && flight.arrival && (
                           <div className="flex gap-2 mt-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="text-xs h-7 px-2"
+                              className="text-xs h-7 px-2 bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800"
                               onClick={() => {
                                 const url = `https://www.google.com/flights?q=flights+from+${getLocationQueryParam(flight.departure)}+to+${getLocationQueryParam(flight.arrival)}`;
                                 window.open(url, '_blank');
@@ -436,31 +360,29 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {accommodations && Array.isArray(accommodations) && accommodations.length > 0 && (
               <AccordionItem value="accommodations">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Building2 className="mr-2 h-5 w-5 text-primary" />
-                    <span>Accommodations</span>
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-1.5 rounded-full text-white mr-2">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-amber-600 dark:group-hover:text-amber-400">Accommodations</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
                     {accommodations.map((accommodation: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">{accommodation.name}</p>
+                      <div key={index} className="border-l-2 border-amber-300 pl-4 py-2 bg-amber-50/50 rounded-r-lg dark:bg-amber-900/10 dark:border-amber-800">
+                        <p className="font-medium text-amber-700 dark:text-amber-300">{accommodation.name}</p>
                         {accommodation.location && (
-                          <p className="text-sm text-muted-foreground">{accommodation.location}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-300">{accommodation.location}</p>
                         )}
                         {(accommodation.pricePerNight || accommodation.totalCost) && (
-                          <p className="text-sm font-medium mt-1">
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
                             {accommodation.pricePerNight && `Price per night: ${accommodation.pricePerNight}`}
                             {accommodation.pricePerNight && accommodation.totalCost && ' | '}
                             {accommodation.totalCost && `Total: ${accommodation.totalCost}`}
                           </p>
                         )}
-                        <LocationImage 
-                          location={accommodation.name}
-                          alt={`Image of ${accommodation.name}`}
-                        />
                         <NavigationButton location={accommodation.location || accommodation.name} />
                       </div>
                     ))}
@@ -471,27 +393,25 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {attractions && Array.isArray(attractions) && attractions.length > 0 && (
               <AccordionItem value="attractions">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Map className="mr-2 h-5 w-5 text-primary" />
-                    <span>Attractions</span>
+                    <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-1.5 rounded-full text-white mr-2">
+                      <Map className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Attractions</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
                     {attractions.map((attraction: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">{attraction.name}</p>
+                      <div key={index} className="border-l-2 border-emerald-300 pl-4 py-2 bg-emerald-50/50 rounded-r-lg dark:bg-emerald-900/10 dark:border-emerald-800">
+                        <p className="font-medium text-emerald-700 dark:text-emerald-300">{attraction.name}</p>
                         {attraction.description && (
-                          <p className="text-sm text-muted-foreground">{attraction.description}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-300">{attraction.description}</p>
                         )}
                         {attraction.estimatedCost && (
-                          <p className="text-sm font-medium mt-1">Estimated cost: {attraction.estimatedCost}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Estimated cost: {attraction.estimatedCost}</p>
                         )}
-                        <LocationImage 
-                          location={attraction.name}
-                          alt={`Image of ${attraction.name}`}
-                        />
                         <NavigationButton location={attraction.name} />
                       </div>
                     ))}
@@ -502,27 +422,25 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {restaurants && Array.isArray(restaurants) && restaurants.length > 0 && (
               <AccordionItem value="restaurants">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Utensils className="mr-2 h-5 w-5 text-primary" />
-                    <span>Restaurants</span>
+                    <div className="bg-gradient-to-r from-rose-500 to-red-500 p-1.5 rounded-full text-white mr-2">
+                      <Utensils className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-rose-600 dark:group-hover:text-rose-400">Restaurants</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
                     {restaurants.map((restaurant: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">{restaurant.name}</p>
+                      <div key={index} className="border-l-2 border-rose-300 pl-4 py-2 bg-rose-50/50 rounded-r-lg dark:bg-rose-900/10 dark:border-rose-800">
+                        <p className="font-medium text-rose-700 dark:text-rose-300">{restaurant.name}</p>
                         {restaurant.cuisine && (
-                          <p className="text-sm text-muted-foreground">Cuisine: {restaurant.cuisine}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-300">Cuisine: {restaurant.cuisine}</p>
                         )}
                         {restaurant.priceRange && (
-                          <p className="text-sm font-medium mt-1">Price Range: {restaurant.priceRange}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Price Range: {restaurant.priceRange}</p>
                         )}
-                        <LocationImage 
-                          location={`${restaurant.name} ${restaurant.cuisine || ""} restaurant`}
-                          alt={`Image of ${restaurant.name}`}
-                        />
                         <NavigationButton location={restaurant.name} />
                       </div>
                     ))}
@@ -533,98 +451,84 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {itinerary && Array.isArray(itinerary) && itinerary.length > 0 && (
               <AccordionItem value="itinerary">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Calendar className="mr-2 h-5 w-5 text-primary" />
-                    <span>Itinerary</span>
+                    <div className="bg-gradient-to-r from-indigo-500 to-violet-500 p-1.5 rounded-full text-white mr-2">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Itinerary</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6 pl-7">
-                    {itinerary.map((day: any, index: number) => {
-                      let mainActivity = "";
-                      if (Array.isArray(day.activities) && day.activities.length > 0) {
-                        mainActivity = typeof day.activities[0] === 'string' 
-                          ? day.activities[0] 
-                          : (day.activities[0]?.name || `Day ${day.day} activities`);
-                      }
-                      
-                      return (
-                        <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                          <p className="font-medium">Day {day.day}</p>
-                          
-                          {mainActivity && (
-                            <LocationImage 
-                              location={mainActivity}
-                              alt={`Map of Day ${day.day} activities`}
-                            />
-                          )}
-                          
-                          {Array.isArray(day.activities) && day.activities.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium">Activities:</p>
-                              <ul className="list-disc list-inside space-y-1 ml-2">
-                                {day.activities.map((activity: any, actIndex: number) => {
-                                  const activityText = typeof activity === 'string' ? activity : JSON.stringify(activity);
-                                  return (
-                                    <li key={actIndex} className="text-sm">
-                                      {activityText}
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className="ml-2 h-6 px-2 text-xs"
-                                        onClick={() => {
-                                          const locationText = typeof activity === 'string' ? activity : (activity.name || activity.location || JSON.stringify(activity));
-                                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                          window.open(googleMapsUrl, '_blank');
-                                        }}
-                                      >
-                                        <MapPin className="h-3 w-3" />
-                                      </Button>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
-                          
-                          {Array.isArray(day.meals) && day.meals.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium">Meals:</p>
-                              <ul className="list-disc list-inside space-y-1 ml-2">
-                                {day.meals.map((meal: any, mealIndex: number) => {
-                                  const mealText = typeof meal === 'string' ? meal : JSON.stringify(meal);
-                                  return (
-                                    <li key={mealIndex} className="text-sm">
-                                      {mealText}
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className="ml-2 h-6 px-2 text-xs"
-                                        onClick={() => {
-                                          const locationText = typeof meal === 'string' ? meal : (meal.name || meal.location || JSON.stringify(meal));
-                                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                          window.open(googleMapsUrl, '_blank');
-                                        }}
-                                      >
-                                        <MapPin className="h-3 w-3" />
-                                      </Button>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
-                          
-                          {day.notes && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium">Notes:</p>
-                              <p className="text-sm text-muted-foreground">{day.notes}</p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {itinerary.map((day: any, index: number) => (
+                      <div key={index} className="border-l-2 border-indigo-300 pl-4 py-2 bg-indigo-50/50 rounded-r-lg dark:bg-indigo-900/10 dark:border-indigo-800">
+                        <p className="font-medium text-indigo-700 dark:text-indigo-300">Day {day.day}</p>
+                        
+                        {Array.isArray(day.activities) && day.activities.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Activities:</p>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                              {day.activities.map((activity: any, actIndex: number) => {
+                                const activityText = typeof activity === 'string' ? activity : JSON.stringify(activity);
+                                return (
+                                  <li key={actIndex} className="text-sm text-slate-600 dark:text-slate-300">
+                                    {activityText}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="ml-2 h-6 px-2 text-xs text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-300"
+                                      onClick={() => {
+                                        const locationText = typeof activity === 'string' ? activity : (activity.name || activity.location || JSON.stringify(activity));
+                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
+                                        window.open(googleMapsUrl, '_blank');
+                                      }}
+                                    >
+                                      <MapPin className="h-3 w-3" />
+                                    </Button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {Array.isArray(day.meals) && day.meals.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Meals:</p>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                              {day.meals.map((meal: any, mealIndex: number) => {
+                                const mealText = typeof meal === 'string' ? meal : JSON.stringify(meal);
+                                return (
+                                  <li key={mealIndex} className="text-sm text-slate-600 dark:text-slate-300">
+                                    {mealText}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="ml-2 h-6 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:text-rose-300"
+                                      onClick={() => {
+                                        const locationText = typeof meal === 'string' ? meal : (meal.name || meal.location || JSON.stringify(meal));
+                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
+                                        window.open(googleMapsUrl, '_blank');
+                                      }}
+                                    >
+                                      <MapPin className="h-3 w-3" />
+                                    </Button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {day.notes && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Notes:</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{day.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -632,19 +536,21 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {budgetBreakdown && (
               <AccordionItem value="budget">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <DollarSign className="mr-2 h-5 w-5 text-primary" />
-                    <span>Budget Breakdown</span>
+                    <div className="bg-gradient-to-r from-teal-500 to-green-500 p-1.5 rounded-full text-white mr-2">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-teal-600 dark:group-hover:text-teal-400">Budget Breakdown</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="pl-7">
+                  <div className="pl-7 p-4 bg-gradient-to-br from-teal-50 to-green-50 rounded-lg dark:from-teal-900/10 dark:to-green-900/10">
                     <ul className="space-y-2">
                       {Object.entries(budgetBreakdown).map(([category, cost]) => (
-                        <li key={category} className="flex justify-between">
-                          <span className="capitalize">{category}</span>
-                          <span className="font-medium">{typeof cost === 'string' ? cost : JSON.stringify(cost)}</span>
+                        <li key={category} className="flex justify-between border-b border-teal-100 pb-1 dark:border-teal-800">
+                          <span className="capitalize text-slate-700 dark:text-slate-300">{category}</span>
+                          <span className="font-medium text-teal-600 dark:text-teal-400">{typeof cost === 'string' ? cost : JSON.stringify(cost)}</span>
                         </li>
                       ))}
                     </ul>
@@ -655,17 +561,19 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             
             {tipsArray.length > 0 && (
               <AccordionItem value="tips">
-                <AccordionTrigger className="py-4">
+                <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
-                    <Info className="mr-2 h-5 w-5 text-primary" />
-                    <span>Travel Tips</span>
+                    <div className="bg-gradient-to-r from-purple-500 to-violet-500 p-1.5 rounded-full text-white mr-2">
+                      <Info className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-purple-600 dark:group-hover:text-purple-400">Travel Tips</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="pl-7">
+                  <div className="pl-7 p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg dark:from-purple-900/10 dark:to-violet-900/10">
                     <ul className="list-disc list-outside space-y-2 ml-4">
                       {tipsArray.map((tip: string, index: number) => (
-                        <li key={index} className="text-sm">{tip}</li>
+                        <li key={index} className="text-sm text-slate-700 dark:text-slate-300">{tip}</li>
                       ))}
                     </ul>
                   </div>

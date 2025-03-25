@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Calendar, DollarSign } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, Plane, Globe } from 'lucide-react';
 import TripPlanForm from './TripPlanForm';
 
 const TravelAssistant: React.FC = () => {
@@ -16,27 +16,38 @@ const TravelAssistant: React.FC = () => {
       transition={{ duration: 0.6 }}
       className="w-full"
     >
-      <Card className="border shadow-md">
-        <CardHeader className="pb-4">
+      <Card className="border shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-950">
+        <CardHeader className="pb-4 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-slate-700 dark:to-indigo-900 rounded-t-lg">
           <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <MapPin className="h-5 w-5 text-primary" />
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-full text-white">
+              <Globe className="h-5 w-5" />
             </div>
-            Travel Assistant
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400">
+              Travel Assistant
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="trip-plan" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="trip-plan" className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
+            <TabsList className="grid w-full grid-cols-3 mb-4 bg-blue-100/50 dark:bg-slate-800">
+              <TabsTrigger 
+                value="trip-plan" 
+                className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+              >
+                <Plane className="h-4 w-4" />
                 <span className="hidden sm:inline">Trip Planner</span>
               </TabsTrigger>
-              <TabsTrigger value="activities" className="flex items-center gap-1">
+              <TabsTrigger 
+                value="activities" 
+                className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+              >
                 <Calendar className="h-4 w-4" />
                 <span className="hidden sm:inline">Activities</span>
               </TabsTrigger>
-              <TabsTrigger value="budget" className="flex items-center gap-1">
+              <TabsTrigger 
+                value="budget" 
+                className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+              >
                 <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Budget</span>
               </TabsTrigger>
@@ -47,8 +58,8 @@ const TravelAssistant: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="activities" className="mt-0">
-              <div className="text-center p-8">
-                <h3 className="text-lg font-medium mb-2">Activities Finder</h3>
+              <div className="text-center p-8 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg">
+                <h3 className="text-lg font-medium mb-2 text-purple-700 dark:text-purple-300">Activities Finder</h3>
                 <p className="text-muted-foreground">
                   Coming soon! Discover and book exciting activities for your trip.
                 </p>
@@ -56,8 +67,8 @@ const TravelAssistant: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="budget" className="mt-0">
-              <div className="text-center p-8">
-                <h3 className="text-lg font-medium mb-2">Budget Calculator</h3>
+              <div className="text-center p-8 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/30 dark:to-teal-900/30 rounded-lg">
+                <h3 className="text-lg font-medium mb-2 text-teal-700 dark:text-teal-300">Budget Calculator</h3>
                 <p className="text-muted-foreground">
                   Coming soon! Plan and track your travel expenses with our budget calculator.
                 </p>
