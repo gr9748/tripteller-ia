@@ -118,7 +118,36 @@ const LocationImage = ({ location, alt, className }: { location: string, alt: st
   );
 };
 
-const LiveLocationButton = () => {
+const LiveLocationMap = ({ location, currentLocation }: { location: string, currentLocation?: GeolocationPosition | null }) => {
+  const mapUrl = getGoogleMapImageForLocation(
+    location,
+    600,
+    400,
+    13
+  );
+  
+  return (
+    <div className="mt-4 mb-4 overflow-hidden rounded-lg shadow-md">
+      <img 
+        src={mapUrl} 
+        alt={`Map of ${location}`}
+        className="w-full h-auto object-cover"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.src = getGoogleMapImageForLocation("world", 600, 400, 1);
+          console.log("Map failed to load, using fallback");
+        }}
+      />
+      {currentLocation && (
+        <div className="bg-background/80 backdrop-blur-sm text-sm p-2 border-t">
+          <p>Your location: {currentLocation.coords.latitude.toFixed(5)}, {currentLocation.coords.longitude.toFixed(5)}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const LiveLocationButton = ({ destination }: { destination: string }) => {
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
   
@@ -183,16 +212,37 @@ const LiveLocationButton = () => {
   }, []);
   
   return (
-    <div className="mt-4 space-y-2">
-      <Button 
-        variant={isTracking ? "destructive" : "default"}
-        size="sm"
-        onClick={toggleLocationTracking}
-        className="w-full"
-      >
-        <Navigation className="h-4 w-4 mr-2" />
-        {isTracking ? 'Stop Tracking Location' : 'Start Tracking Location'}
-      </Button>
+    <div className="space-y-2">
+      {isTracking && currentLocation && (
+        <LiveLocationMap 
+          location={destination} 
+          currentLocation={currentLocation} 
+        />
+      )}
+      
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button 
+          variant={isTracking ? "destructive" : "default"}
+          size="sm"
+          onClick={toggleLocationTracking}
+          className="flex-1"
+        >
+          <Navigation className="h-4 w-4 mr-2" />
+          {isTracking ? 'Stop Tracking Location' : 'Start Tracking Location'}
+        </Button>
+        
+        {isTracking && currentLocation && (
+          <Button
+            variant="default"
+            size="sm"
+            className="flex-1"
+            onClick={() => navigateFromCurrentLocation(destination)}
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Navigate to Destination
+          </Button>
+        )}
+      </div>
       
       {currentLocation && (
         <div className="text-xs text-muted-foreground">
@@ -249,7 +299,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
         />
       </div>
 
-      <LiveLocationButton />
+      <LiveLocationButton destination={tripPlan.destination} />
       
       <ScrollArea className="h-[calc(100vh-430px)] pr-4 -mr-4 mt-4">
         <div className="space-y-2">
@@ -491,81 +541,90 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6 pl-7">
-                    {itinerary.map((day: any, index: number) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
-                        <p className="font-medium">Day {day.day}</p>
-                        
-                        {Array.isArray(day.activities) && day.activities.length > 0 && (
-                          <LocationImage 
-                            location={typeof day.activities[0] === 'string' ? day.activities[0] : (day.activities[0]?.name || `Day ${day.day} activities`)}
-                            alt={`Map of Day ${day.day} activities`}
-                          />
-                        )}
-                        
-                        {Array.isArray(day.activities) && day.activities.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium">Activities:</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              {day.activities.map((activity: any, actIndex: number) => {
-                                const activityText = typeof activity === 'string' ? activity : JSON.stringify(activity);
-                                return (
-                                  <li key={actIndex} className="text-sm">
-                                    {activityText}
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="ml-2 h-6 px-2 text-xs"
-                                      onClick={() => {
-                                        const locationText = typeof activity === 'string' ? activity : (activity.name || activity.location || JSON.stringify(activity));
-                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                        window.open(googleMapsUrl, '_blank');
-                                      }}
-                                    >
-                                      <MapPin className="h-3 w-3" />
-                                    </Button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {Array.isArray(day.meals) && day.meals.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium">Meals:</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              {day.meals.map((meal: any, mealIndex: number) => {
-                                const mealText = typeof meal === 'string' ? meal : JSON.stringify(meal);
-                                return (
-                                  <li key={mealIndex} className="text-sm">
-                                    {mealText}
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="ml-2 h-6 px-2 text-xs"
-                                      onClick={() => {
-                                        const locationText = typeof meal === 'string' ? meal : (meal.name || meal.location || JSON.stringify(meal));
-                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                        window.open(googleMapsUrl, '_blank');
-                                      }}
-                                    >
-                                      <MapPin className="h-3 w-3" />
-                                    </Button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {day.notes && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium">Notes:</p>
-                            <p className="text-sm text-muted-foreground">{day.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    {itinerary.map((day: any, index: number) => {
+                      let mainActivity = "";
+                      if (Array.isArray(day.activities) && day.activities.length > 0) {
+                        mainActivity = typeof day.activities[0] === 'string' 
+                          ? day.activities[0] 
+                          : (day.activities[0]?.name || `Day ${day.day} activities`);
+                      }
+                      
+                      return (
+                        <div key={index} className="border-l-2 border-primary/20 pl-4 py-2">
+                          <p className="font-medium">Day {day.day}</p>
+                          
+                          {mainActivity && (
+                            <LocationImage 
+                              location={mainActivity}
+                              alt={`Map of Day ${day.day} activities`}
+                            />
+                          )}
+                          
+                          {Array.isArray(day.activities) && day.activities.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium">Activities:</p>
+                              <ul className="list-disc list-inside space-y-1 ml-2">
+                                {day.activities.map((activity: any, actIndex: number) => {
+                                  const activityText = typeof activity === 'string' ? activity : JSON.stringify(activity);
+                                  return (
+                                    <li key={actIndex} className="text-sm">
+                                      {activityText}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="ml-2 h-6 px-2 text-xs"
+                                        onClick={() => {
+                                          const locationText = typeof activity === 'string' ? activity : (activity.name || activity.location || JSON.stringify(activity));
+                                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
+                                          window.open(googleMapsUrl, '_blank');
+                                        }}
+                                      >
+                                        <MapPin className="h-3 w-3" />
+                                      </Button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {Array.isArray(day.meals) && day.meals.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium">Meals:</p>
+                              <ul className="list-disc list-inside space-y-1 ml-2">
+                                {day.meals.map((meal: any, mealIndex: number) => {
+                                  const mealText = typeof meal === 'string' ? meal : JSON.stringify(meal);
+                                  return (
+                                    <li key={mealIndex} className="text-sm">
+                                      {mealText}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="ml-2 h-6 px-2 text-xs"
+                                        onClick={() => {
+                                          const locationText = typeof meal === 'string' ? meal : (meal.name || meal.location || JSON.stringify(meal));
+                                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
+                                          window.open(googleMapsUrl, '_blank');
+                                        }}
+                                      >
+                                        <MapPin className="h-3 w-3" />
+                                      </Button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {day.notes && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium">Notes:</p>
+                              <p className="text-sm text-muted-foreground">{day.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>

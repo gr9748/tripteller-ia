@@ -15,6 +15,8 @@ const TripPlanForm: React.FC = () => {
   const { formData, handleChange, resetForm, validateForm } = useTripFormState();
   const { isSubmitting, submitTripPlan, generatedTripPlan } = useTripFormSubmit(resetForm);
   const [showForm, setShowForm] = useState(true);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const [heroImageError, setHeroImageError] = useState(false);
 
   useEffect(() => {
     // When generatedTripPlan changes and is valid, hide the form
@@ -38,6 +40,8 @@ const TripPlanForm: React.FC = () => {
   const handleCreateNew = () => {
     setShowForm(true);
     resetForm();
+    setHeroImageLoaded(false);
+    setHeroImageError(false);
   };
 
   // Get a Google Maps Static image for the background
@@ -51,22 +55,26 @@ const TripPlanForm: React.FC = () => {
   
   const backgroundImage = getGoogleMapImage(formData.destination, 1600, 900, 10);
   const heroImage = getGoogleMapImage(formData.destination, 1600, 400, 12);
-
-  // Debug logs to understand what's happening with the generated trip plan
-  console.log("Current generatedTripPlan:", generatedTripPlan);
-  console.log("showForm state:", showForm);
   
   return (
     <div className="w-full max-w-3xl mx-auto">
       {/* Hero image at the top */}
       <div className="w-full h-48 mb-6 overflow-hidden rounded-lg shadow-md">
+        {!heroImageLoaded && !heroImageError && (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         <img 
           src={heroImage} 
           alt="Travel destination" 
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setHeroImageLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
+            setHeroImageError(true);
             target.src = "https://maps.googleapis.com/maps/api/staticmap?center=world&zoom=2&size=1600x400&maptype=roadmap&key=AIzaSyDZKk5fy9S15OzHgfKSVdvZCbxPoUyA8xE";
+            setHeroImageLoaded(true);
             console.log("Hero image failed to load, using fallback");
           }}
         />
