@@ -1,13 +1,49 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Calendar, DollarSign, Plane, Globe } from 'lucide-react';
+import { MapPin, Calendar, History, Plane, Globe } from 'lucide-react';
 import TripPlanForm from './TripPlanForm';
+import PreviousPlans from './PreviousPlans';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const TravelAssistant: React.FC = () => {
   const [activeTab, setActiveTab] = useState('trip-plan');
+  const { isAuthenticated } = useAuth();
+  const [previousPlans, setPreviousPlans] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'previous-plans') {
+      fetchPreviousPlans();
+    }
+  }, [activeTab, isAuthenticated]);
+
+  const fetchPreviousPlans = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('trip_plans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching previous plans:', error);
+        toast.error('Failed to load previous plans');
+        return;
+      }
+
+      setPreviousPlans(data || []);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -29,7 +65,7 @@ const TravelAssistant: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="trip-plan" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4 bg-blue-100/50 dark:bg-slate-800">
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-blue-100/50 dark:bg-slate-800">
               <TabsTrigger 
                 value="trip-plan" 
                 className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
@@ -38,18 +74,11 @@ const TravelAssistant: React.FC = () => {
                 <span className="hidden sm:inline">Trip Planner</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="activities" 
+                value="previous-plans" 
                 className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
               >
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Activities</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="budget" 
-                className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
-              >
-                <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Budget</span>
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Previous Plans</span>
               </TabsTrigger>
             </TabsList>
             
@@ -57,22 +86,12 @@ const TravelAssistant: React.FC = () => {
               <TripPlanForm />
             </TabsContent>
             
-            <TabsContent value="activities" className="mt-0">
-              <div className="text-center p-8 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg">
-                <h3 className="text-lg font-medium mb-2 text-purple-700 dark:text-purple-300">Activities Finder</h3>
-                <p className="text-muted-foreground">
-                  Coming soon! Discover and book exciting activities for your trip.
-                </p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="budget" className="mt-0">
-              <div className="text-center p-8 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/30 dark:to-teal-900/30 rounded-lg">
-                <h3 className="text-lg font-medium mb-2 text-teal-700 dark:text-teal-300">Budget Calculator</h3>
-                <p className="text-muted-foreground">
-                  Coming soon! Plan and track your travel expenses with our budget calculator.
-                </p>
-              </div>
+            <TabsContent value="previous-plans" className="mt-0">
+              <PreviousPlans 
+                plans={previousPlans} 
+                isLoading={isLoading}
+                onRefresh={fetchPreviousPlans}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
