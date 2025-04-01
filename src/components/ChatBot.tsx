@@ -111,7 +111,7 @@ const ChatBot: React.FC = () => {
       >
         <Button
           onClick={toggleChat}
-          className="rounded-full w-14 h-14 p-0 bg-primary shadow-lg"
+          className="rounded-full w-14 h-14 p-0 bg-gradient-to-r from-indigo-600 to-blue-600 shadow-lg hover:from-indigo-700 hover:to-blue-700"
           aria-label="Open chat assistant"
         >
           <div className="flex items-center justify-center">
@@ -134,24 +134,24 @@ const ChatBot: React.FC = () => {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           >
-            <Card className="flex flex-col h-[500px] shadow-xl border border-primary/20 overflow-hidden">
+            <Card className="flex flex-col h-[500px] shadow-xl border border-indigo-200 dark:border-indigo-800 overflow-hidden">
               {/* Chat Header */}
-              <div className="p-3 border-b bg-primary text-primary-foreground flex items-center justify-between">
+              <div className="p-3 border-b bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-white/50">
                     <AvatarImage src="/placeholder.svg" alt="Odyssique" />
-                    <AvatarFallback className="bg-primary-foreground text-primary">OD</AvatarFallback>
+                    <AvatarFallback className="bg-indigo-100 text-indigo-700">OD</AvatarFallback>
                   </Avatar>
                   <span className="font-medium">Odyssique</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={toggleChat} className="text-primary-foreground hover:bg-primary/90">
+                <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-white/10">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
 
               {/* Chat Messages */}
               <div 
-                className="flex-1 overflow-y-auto p-4 space-y-4"
+                className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20"
                 ref={chatContainerRef}
               >
                 {chatHistory.map((chat, index) => (
@@ -162,8 +162,8 @@ const ChatBot: React.FC = () => {
                     <div 
                       className={`max-w-[80%] px-4 py-2 rounded-lg ${
                         chat.role === 'user' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
+                          ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white' 
+                          : 'bg-white dark:bg-gray-800 shadow-sm border border-indigo-100 dark:border-indigo-800/50'
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{chat.content}</p>
@@ -175,8 +175,8 @@ const ChatBot: React.FC = () => {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="max-w-[80%] px-4 py-2 rounded-lg bg-muted flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="max-w-[80%] px-4 py-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-indigo-100 dark:border-indigo-800/50 flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
                       <p className="text-sm">Thinking...</p>
                     </div>
                   </div>
@@ -184,12 +184,12 @@ const ChatBot: React.FC = () => {
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSubmit} className="p-3 border-t bg-card flex items-end space-x-2">
+              <form onSubmit={handleSubmit} className="p-3 border-t bg-white dark:bg-gray-900 flex items-end space-x-2">
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="resize-none min-h-[60px] max-h-[120px]"
+                  className="resize-none min-h-[60px] max-h-[120px] border-indigo-200 dark:border-indigo-800 focus-visible:ring-indigo-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -202,6 +202,7 @@ const ChatBot: React.FC = () => {
                   type="submit" 
                   size="icon"
                   disabled={!message.trim() || isLoading}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

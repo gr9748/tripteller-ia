@@ -187,7 +187,7 @@ const Index: React.FC = () => {
 
       <footer className="py-6 border-t">
         <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <h3 className="text-lg font-semibold mb-4">About</h3>
               <p className="text-sm text-muted-foreground">
@@ -205,19 +205,12 @@ const Index: React.FC = () => {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-4">Privacy</h3>
+              <h3 className="text-lg font-semibold mb-4">Privacy & Terms</h3>
               <p className="text-sm text-muted-foreground">
                 Your privacy matters to us. We only collect information necessary to provide our services, 
                 and we never sell your data to third parties. You control your data and can delete it anytime.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Terms</h3>
-              <p className="text-sm text-muted-foreground">
                 By using TravelAI, you agree to our terms of service. We provide our platform as-is and 
-                make no guarantees about travel availability or pricing. Users are responsible for verifying 
-                all travel details before booking.
+                make no guarantees about travel availability or pricing.
               </p>
             </div>
           </div>
