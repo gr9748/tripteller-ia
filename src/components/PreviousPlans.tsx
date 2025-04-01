@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { RefreshCcw, Map, Calendar, DollarSign, Users, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { RefreshCcw, Map, Calendar, DollarSign, Users, ExternalLink, Trash2, Eye } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface TripPlan {
   id: string;
@@ -26,7 +28,30 @@ interface PreviousPlansProps {
 }
 
 const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefresh }) => {
-  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState<TripPlan | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(id);
+      const { error } = await supabase
+        .from('trip_plans')
+        .delete()
+        .match({ id });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Trip plan deleted successfully');
+      onRefresh(); // Refresh the list after deletion
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      toast.error('Failed to delete trip plan');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -101,24 +126,79 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
                     </div>
                   </div>
                   
-                  <Button 
-                    size="sm" 
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 self-start md:self-center"
-                    onClick={() => {
-                      // In a real app, you would navigate to a detailed view of this plan
-                      console.log('View plan details:', plan);
-                      // navigate(`/plans/${plan.id}`);
-                    }}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                    View Plan
-                  </Button>
+                  <div className="flex gap-2 self-start md:self-center">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/30"
+                      onClick={() => setSelectedPlan(plan)}
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-1 text-blue-500" />
+                      View
+                    </Button>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/30"
+                      onClick={() => handleDelete(plan.id)}
+                      disabled={isDeleting === plan.id}
+                    >
+                      {isDeleting === plan.id ? (
+                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-red-500 mr-1" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5 mr-1 text-red-500" />
+                      )}
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
+      
+      {/* Plan Details Dialog */}
+      <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-blue-700 dark:text-blue-400">
+              {selectedPlan?.source} to {selectedPlan?.destination}
+            </DialogTitle>
+            <DialogDescription className="flex flex-wrap gap-3 text-sm mt-2">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                <span>{formatDate(selectedPlan?.start_date || '')} to {formatDate(selectedPlan?.end_date || '')}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4 text-green-500" />
+                <span>Budget: ${selectedPlan?.budget}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4 text-purple-500" />
+                <span>Travelers: {selectedPlan?.travelers}</span>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            {selectedPlan?.ai_response ? (
+              <div className="prose prose-blue max-w-none dark:prose-invert bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <pre className="whitespace-pre-wrap text-sm bg-transparent border-none p-0">
+                  {typeof selectedPlan.ai_response === 'string' 
+                    ? selectedPlan.ai_response 
+                    : JSON.stringify(selectedPlan.ai_response, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <div className="text-center p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <p className="text-muted-foreground">No detailed plan information available.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

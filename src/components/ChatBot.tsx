@@ -38,7 +38,7 @@ const ChatBot: React.FC = () => {
       setChatHistory([
         {
           role: 'assistant',
-          content: 'Hello! I\'m your travel assistant. How can I help you plan your trip today?',
+          content: 'Hello! I\'m Odyssique, your travel companion. I can help you discover hotels, restaurants, and attractions worldwide. How can I assist with your travel plans today?',
           timestamp: new Date()
         }
       ]);
@@ -139,10 +139,10 @@ const ChatBot: React.FC = () => {
               <div className="p-3 border-b bg-primary text-primary-foreground flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" alt="TravelAI" />
-                    <AvatarFallback className="bg-primary-foreground text-primary">AI</AvatarFallback>
+                    <AvatarImage src="/placeholder.svg" alt="Odyssique" />
+                    <AvatarFallback className="bg-primary-foreground text-primary">OD</AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">Travel Assistant</span>
+                  <span className="font-medium">Odyssique</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={toggleChat} className="text-primary-foreground hover:bg-primary/90">
                   <X className="h-4 w-4" />
