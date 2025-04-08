@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -307,9 +306,18 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
     budgetBreakdown,
     tips,
     activities
-  } = tripPlan.ai_response;
+  } = tripPlan.ai_response || {};
 
+  // Handle potential undefined values to prevent errors
   const tipsArray = Array.isArray(tips) ? tips : [];
+  const flightsArray = Array.isArray(flights) ? flights : [];
+  const accommodationsArray = Array.isArray(accommodations) ? accommodations : [];
+  const attractionsArray = Array.isArray(attractions) ? attractions : [];
+  const restaurantsArray = Array.isArray(restaurants) ? restaurants : [];
+  const transportationArray = Array.isArray(transportation) ? transportation : [];
+  const itineraryArray = Array.isArray(itinerary) ? itinerary : [];
+  const activitiesArray = Array.isArray(activities) ? activities : [];
+  const budget = budgetBreakdown || {};
 
   return (
     <motion.div
@@ -362,7 +370,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
           )}
           
           <Accordion type="single" collapsible className="w-full">
-            {transportation && Array.isArray(transportation) && transportation.length > 0 && (
+            {transportationArray.length > 0 && (
               <AccordionItem value="transportation" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -374,10 +382,10 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3 pl-7">
-                    {transportation.map((transport: any, index: number) => (
+                    {transportationArray.map((transport: any, index: number) => (
                       <div key={index} className="border-l-2 border-cyan-300 pl-4 py-2 bg-cyan-50/50 rounded-r-lg dark:bg-cyan-900/10 dark:border-cyan-800">
                         <div className="flex items-center gap-2">
-                          {getTransportationIcon(transport.type)}
+                          {getTransportationIcon(transport.type || '')}
                           <p className="font-medium text-cyan-700 dark:text-cyan-300">{transport.type}</p>
                         </div>
                         
@@ -421,7 +429,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
 
-            {(activities && Array.isArray(activities) && activities.length > 0) && (
+            {activitiesArray.length > 0 && (
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -433,7 +441,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3 pl-7">
-                    {activities.map((activity: any, index: number) => {
+                    {activitiesArray.map((activity: any, index: number) => {
                       const activityName = typeof activity === 'string' ? activity : (activity.name || '');
                       return (
                         <div key={index} className="border-l-2 border-pink-300 pl-4 py-2 bg-pink-50/50 rounded-r-lg dark:bg-pink-900/10 dark:border-pink-800">
@@ -443,7 +451,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           {activity.cost && (
                             <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                              Cost: {formatCurrency(parseInt(activity.cost.toString().replace(/[^\d]/g, '') || '0'))}
+                              Cost: {formatCurrency(parseInt((activity.cost || '0').toString().replace(/[^\d]/g, '') || '0'))}
                             </p>
                           )}
                           <NavigationButton location={activityName} />
@@ -455,7 +463,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
 
-            {(!activities || !Array.isArray(activities) || activities.length === 0) && attractions && Array.isArray(attractions) && attractions.length > 0 && (
+            {(!activitiesArray.length && attractionsArray.length > 0) && (
               <AccordionItem value="fun-activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -467,7 +475,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3 pl-7">
-                    {attractions
+                    {attractionsArray
                       .filter((attraction: any) => 
                         typeof attraction.name === 'string' && (
                           attraction.name.toLowerCase().includes('adventure') || 
@@ -490,7 +498,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           {activity.estimatedCost && (
                             <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                              Cost: {formatCurrency(Number(activity.estimatedCost))}
+                              Cost: {formatCurrency(Number(activity.estimatedCost || 0))}
                             </p>
                           )}
                           <NavigationButton location={activity.name} />
@@ -501,7 +509,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
             
-            {flights && Array.isArray(flights) && flights.length > 0 && (
+            {flightsArray.length > 0 && (
               <AccordionItem value="flights">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -523,7 +531,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                       </Button>
                     </div>
                     
-                    {flights.map((flight: any, index: number) => (
+                    {flightsArray.map((flight: any, index: number) => (
                       <div key={index} className="border-l-2 border-sky-300 pl-4 py-2 bg-sky-50/50 rounded-r-lg dark:bg-sky-900/10 dark:border-sky-800">
                         <p className="font-medium text-sky-700 dark:text-sky-300">{flight.airline || 'Flight Option ' + (index + 1)}</p>
                         {flight.departure && flight.arrival && (
@@ -533,7 +541,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {flight.price && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Price: {formatCurrency(parseInt(flight.price.toString().replace(/[^\d]/g, '') || '0'))}
+                            Price: {formatCurrency(parseInt((flight.price || '0').toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         {flight.departure && flight.arrival && (
@@ -559,7 +567,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
             
-            {accommodations && Array.isArray(accommodations) && accommodations.length > 0 && (
+            {accommodationsArray.length > 0 && (
               <AccordionItem value="accommodations">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -571,7 +579,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
-                    {accommodations.map((accommodation: any, index: number) => (
+                    {accommodationsArray.map((accommodation: any, index: number) => (
                       <div key={index} className="border-l-2 border-amber-300 pl-4 py-2 bg-amber-50/50 rounded-r-lg dark:bg-amber-900/10 dark:border-amber-800">
                         <p className="font-medium text-amber-700 dark:text-amber-300">{accommodation.name}</p>
                         {accommodation.location && (
@@ -579,9 +587,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {(accommodation.pricePerNight || accommodation.totalCost) && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            {accommodation.pricePerNight && `Price per night: ${formatCurrency(parseInt(accommodation.pricePerNight.toString().replace(/[^\d]/g, '') || '0'))}`}
+                            {accommodation.pricePerNight && `Price per night: ${formatCurrency(parseInt((accommodation.pricePerNight || '0').toString().replace(/[^\d]/g, '') || '0'))}`}
                             {accommodation.pricePerNight && accommodation.totalCost && ' | '}
-                            {accommodation.totalCost && `Total: ${formatCurrency(parseInt(accommodation.totalCost.toString().replace(/[^\d]/g, '') || '0'))}`}
+                            {accommodation.totalCost && `Total: ${formatCurrency(parseInt((accommodation.totalCost || '0').toString().replace(/[^\d]/g, '') || '0'))}`}
                           </p>
                         )}
                         <NavigationButton location={accommodation.location || accommodation.name} />
@@ -592,7 +600,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
             
-            {attractions && Array.isArray(attractions) && attractions.length > 0 && (
+            {attractionsArray.length > 0 && (
               <AccordionItem value="attractions">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -604,7 +612,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
-                    {attractions.map((attraction: any, index: number) => (
+                    {attractionsArray.map((attraction: any, index: number) => (
                       <div key={index} className="border-l-2 border-emerald-300 pl-4 py-2 bg-emerald-50/50 rounded-r-lg dark:bg-emerald-900/10 dark:border-emerald-800">
                         <p className="font-medium text-emerald-700 dark:text-emerald-300">{attraction.name}</p>
                         {attraction.description && (
@@ -612,7 +620,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {attraction.estimatedCost && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Estimated cost: {formatCurrency(parseInt(attraction.estimatedCost.toString().replace(/[^\d]/g, '') || '0'))}
+                            Estimated cost: {formatCurrency(parseInt((attraction.estimatedCost || '0').toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         <NavigationButton location={attraction.name} />
@@ -623,7 +631,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
             
-            {restaurants && Array.isArray(restaurants) && restaurants.length > 0 && (
+            {restaurantsArray.length > 0 && (
               <AccordionItem value="restaurants">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -635,7 +643,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
-                    {restaurants.map((restaurant: any, index: number) => (
+                    {restaurantsArray.map((restaurant: any, index: number) => (
                       <div key={index} className="border-l-2 border-rose-300 pl-4 py-2 bg-rose-50/50 rounded-r-lg dark:bg-rose-900/10 dark:border-rose-800">
                         <p className="font-medium text-rose-700 dark:text-rose-300">{restaurant.name}</p>
                         {restaurant.cuisine && (
@@ -654,7 +662,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
               </AccordionItem>
             )}
             
-            {itinerary && Array.isArray(itinerary) && itinerary.length > 0 && (
+            {itineraryArray.length > 0 && (
               <AccordionItem value="itinerary">
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
@@ -666,7 +674,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6 pl-7">
-                    {itinerary.map((day: any, index: number) => (
+                    {itineraryArray.map((day: any, index: number) => (
                       <div key={index} className="border-l-2 border-indigo-300 pl-4 py-2 bg-indigo-50/50 rounded-r-lg dark:bg-indigo-900/10 dark:border-indigo-800">
                         <p className="font-medium text-indigo-700 dark:text-indigo-300">Day {day.day}</p>
                         
@@ -682,144 +690,4 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
-                                      className="ml-2 h-6 px-2 text-xs text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-300"
-                                      onClick={() => {
-                                        const locationText = typeof activity === 'string' ? activity : (activity.name || activity.location || JSON.stringify(activity));
-                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                        window.open(googleMapsUrl, '_blank');
-                                      }}
-                                    >
-                                      <MapPin className="h-3 w-3" />
-                                    </Button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {Array.isArray(day.transportation) && day.transportation.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Transportation:</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              {day.transportation.map((transport: any, transportIndex: number) => {
-                                const transportText = typeof transport === 'string' ? transport : JSON.stringify(transport);
-                                return (
-                                  <li key={transportIndex} className="text-sm text-slate-600 dark:text-slate-300 flex items-center">
-                                    <span>{transportText}</span>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {Array.isArray(day.meals) && day.meals.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Meals:</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              {day.meals.map((meal: any, mealIndex: number) => {
-                                const mealText = typeof meal === 'string' ? meal : JSON.stringify(meal);
-                                return (
-                                  <li key={mealIndex} className="text-sm text-slate-600 dark:text-slate-300">
-                                    {mealText}
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="ml-2 h-6 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:text-rose-300"
-                                      onClick={() => {
-                                        const locationText = typeof meal === 'string' ? meal : (meal.name || meal.location || JSON.stringify(meal));
-                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(locationText)}`;
-                                        window.open(googleMapsUrl, '_blank');
-                                      }}
-                                    >
-                                      <MapPin className="h-3 w-3" />
-                                    </Button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {day.notes && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Notes:</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-300">{day.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-            
-            {budgetBreakdown && (
-              <AccordionItem value="budget">
-                <AccordionTrigger className="py-4 group">
-                  <div className="flex items-center">
-                    <div className="bg-gradient-to-r from-teal-500 to-green-500 p-1.5 rounded-full text-white mr-2">
-                      <IndianRupee className="h-5 w-5" />
-                    </div>
-                    <span className="group-hover:text-teal-600 dark:group-hover:text-teal-400">Budget Breakdown</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pl-7 p-4 bg-gradient-to-br from-teal-50 to-green-50 rounded-lg dark:from-teal-900/10 dark:to-green-900/10">
-                    <ul className="space-y-2">
-                      {Object.entries(budgetBreakdown).map(([category, cost]) => (
-                        <li key={category} className="flex justify-between border-b border-teal-100 pb-1 dark:border-teal-800">
-                          <span className="capitalize text-slate-700 dark:text-slate-300">{category}</span>
-                          <span className="font-medium text-teal-600 dark:text-teal-400">
-                            {typeof cost === 'string' ? 
-                              formatCurrency(parseInt(cost.replace(/[^\d]/g, '') || '0')) : 
-                              formatCurrency(Number(cost || 0))}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-            
-            {tipsArray.length > 0 && (
-              <AccordionItem value="tips">
-                <AccordionTrigger className="py-4 group">
-                  <div className="flex items-center">
-                    <div className="bg-gradient-to-r from-purple-500 to-violet-500 p-1.5 rounded-full text-white mr-2">
-                      <Info className="h-5 w-5" />
-                    </div>
-                    <span className="group-hover:text-purple-600 dark:group-hover:text-purple-400">Travel Tips</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pl-7 p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg dark:from-purple-900/10 dark:to-violet-900/10">
-                    <ul className="list-disc list-outside space-y-2 ml-4">
-                      {tipsArray.map((tip: string, index: number) => (
-                        <li key={index} className="text-sm text-slate-700 dark:text-slate-300">{tip}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
-        </div>
-      </ScrollArea>
-      
-      <FlightSearchDialog 
-        isOpen={isFlightDialogOpen} 
-        onClose={() => setIsFlightDialogOpen(false)} 
-        source={tripPlan.source}
-        destination={tripPlan.destination}
-        startDate={tripPlan.start_date}
-        budget={tripPlan.budget}
-      />
-    </motion.div>
-  );
-};
-
-export default TripPlanDisplay;
-
+                                      className="ml-
