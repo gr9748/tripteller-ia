@@ -56,3 +56,7 @@ export function convertToRupees(value: string | number | undefined): string {
   
   return '₹0';
 }
+
+export function getLocationQueryParam(location: string): string {
+  return encodeURIComponent(location);
+}
