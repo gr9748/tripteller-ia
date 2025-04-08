@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, Users, Heart } from 'lucide-react';
+import { IndianRupee, Users, Heart } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,8 +33,8 @@ export const TripFormDetails: React.FC<TripFormDetailsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div variants={inputVariants} className="space-y-2">
           <Label htmlFor="budget" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Budget (USD)
+            <IndianRupee className="h-4 w-4" />
+            Budget (₹)
           </Label>
           <Input
             id="budget"

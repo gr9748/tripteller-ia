@@ -35,3 +35,24 @@ export function truncateText(text: string, maxLength: number = 100): string {
   if (!text || text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }
+
+export function convertToRupees(value: string | number | undefined): string {
+  if (!value) return '₹0';
+  
+  if (typeof value === 'string') {
+    // Remove any non-numeric characters except for dots
+    const numericValue = value.replace(/[^\d.]/g, '');
+    if (numericValue === '') return '₹0';
+    
+    // Convert to rupees (assuming dollar values need to be multiplied by 75)
+    // This is a simplification - real currency conversion would use current rates
+    const amount = parseFloat(numericValue) * 75;
+    return `₹${Math.round(amount).toLocaleString('en-IN')}`;
+  }
+  
+  if (typeof value === 'number') {
+    return `₹${Math.round(value * 75).toLocaleString('en-IN')}`;
+  }
+  
+  return '₹0';
+}

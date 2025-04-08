@@ -3,8 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, Users, Trash2, Eye } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { Calendar, Users, Trash2, Eye, IndianRupee } from 'lucide-react';
+import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface PlanCardProps {
   plan: {
@@ -42,8 +42,8 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onView, onDelete, isDeleting 
                   <span>{formatDate(plan.start_date)} to {formatDate(plan.end_date)}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <DollarSign className="h-3.5 w-3.5 text-green-500" />
-                  <span>Budget: ${plan.budget}</span>
+                  <IndianRupee className="h-3.5 w-3.5 text-green-500" />
+                  <span>Budget: {formatCurrency(plan.budget)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Users className="h-3.5 w-3.5 text-purple-500" />

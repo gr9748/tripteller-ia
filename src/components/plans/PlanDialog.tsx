@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Calendar, MapPin, Users } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface TripPlan {
@@ -24,10 +24,6 @@ interface PlanDialogProps {
 
 const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
   if (!plan) return null;
-
-  const formatBudget = (amount: number) => {
-    return `₹${amount.toLocaleString('en-IN')}`;
-  };
 
   const handleNavigate = () => {
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plan.destination)}`;
@@ -53,8 +49,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
               <span>{formatDate(plan.start_date || '')} to {formatDate(plan.end_date || '')}</span>
             </div>
             <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4 text-green-500" />
-              <span>Budget: {formatBudget(plan.budget)}</span>
+              <IndianRupee className="h-4 w-4 text-green-500" />
+              <span>Budget: {formatCurrency(plan.budget)}</span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4 text-purple-500" />
@@ -89,9 +85,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
                         )}
                         {flight.price && (
                           <div className="text-green-600 dark:text-green-400 mt-1">
-                            Price: {typeof flight.price === 'string' ? 
-                              flight.price.replace(/\$(\d+)/g, '₹$1') : 
-                              `₹${flight.price}`}
+                            Price: {formatCurrency(parseFloat(flight.price.replace(/[^\d.]/g, '')))}
                           </div>
                         )}
                       </div>
@@ -114,10 +108,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
                         {(accommodation.pricePerNight || accommodation.totalCost) && (
                           <div className="text-green-600 dark:text-green-400 mt-1">
                             {accommodation.pricePerNight && 
-                              `Price per night: ${accommodation.pricePerNight.toString().replace(/\$/g, '₹')}`}
+                              `Price per night: ${formatCurrency(parseFloat(accommodation.pricePerNight.toString().replace(/[^\d.]/g, '')))}` }
                             {accommodation.pricePerNight && accommodation.totalCost && ' | '}
                             {accommodation.totalCost && 
-                              `Total: ${accommodation.totalCost.toString().replace(/\$/g, '₹')}`}
+                              `Total: ${formatCurrency(parseFloat(accommodation.totalCost.toString().replace(/[^\d.]/g, '')))}`}
                           </div>
                         )}
                       </div>

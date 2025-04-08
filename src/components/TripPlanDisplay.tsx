@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -13,7 +12,15 @@ import {
   Navigation,
   Sparkles,
   Search,
-  DollarSign
+  DollarSign,
+  IndianRupee,
+  Train,
+  Bus,
+  Car,
+  Truck,
+  Ship,
+  Footprints,
+  Subway
 } from 'lucide-react';
 import { 
   Accordion,
@@ -25,7 +32,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,22 +59,6 @@ const getLocationQueryParam = (location: string) => {
   return encodeURIComponent(location);
 };
 
-const convertToRupees = (value: string | number | undefined): string => {
-  if (!value) return '₹0';
-  
-  if (typeof value === 'string') {
-    const numericValue = value.replace(/[^\d.]/g, '');
-    const amount = parseFloat(numericValue) * 75;
-    return `₹${amount.toLocaleString('en-IN')}`;
-  }
-  
-  if (typeof value === 'number') {
-    return `₹${(value * 75).toLocaleString('en-IN')}`;
-  }
-  
-  return '₹0';
-};
-
 const NavigationButton = ({ location }: { location: string }) => {
   if (!location) return null;
   
@@ -87,6 +78,16 @@ const NavigationButton = ({ location }: { location: string }) => {
       Navigate
     </Button>
   );
+};
+
+const getTransportationIcon = (type: string) => {
+  const lowerType = type.toLowerCase();
+  for (const [key, icon] of Object.entries(transportationIcons)) {
+    if (lowerType.includes(key)) {
+      return icon;
+    }
+  }
+  return <Truck className="h-4 w-4" />;
 };
 
 const FlightSearchDialog = ({ 
@@ -329,8 +330,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             {tripPlan.start_date} - {tripPlan.end_date}
           </span>
           <span className="flex items-center gap-1">
-            <MapPin className="h-4 w-4 text-green-500" />
-            Budget: ₹{tripPlan.budget.toLocaleString('en-IN')}
+            <IndianRupee className="h-4 w-4 text-green-500" />
+            Budget: {formatCurrency(tripPlan.budget)}
           </span>
         </div>
       </div>
@@ -346,6 +347,65 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
           )}
           
           <Accordion type="single" collapsible className="w-full">
+            {transportation && Array.isArray(transportation) && transportation.length > 0 && (
+              <AccordionItem value="transportation" className="border-b-2 border-primary/10">
+                <AccordionTrigger className="py-4 group">
+                  <div className="flex items-center">
+                    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-1.5 rounded-full text-white mr-2">
+                      <Bus className="h-5 w-5" />
+                    </div>
+                    <span className="group-hover:text-cyan-600 dark:group-hover:text-cyan-400">Transportation Options</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pl-7">
+                    {transportation.map((transport: any, index: number) => (
+                      <div key={index} className="border-l-2 border-cyan-300 pl-4 py-2 bg-cyan-50/50 rounded-r-lg dark:bg-cyan-900/10 dark:border-cyan-800">
+                        <div className="flex items-center gap-2">
+                          {getTransportationIcon(transport.type)}
+                          <p className="font-medium text-cyan-700 dark:text-cyan-300">{transport.type}</p>
+                        </div>
+                        
+                        {transport.route && (
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                            Route: {transport.route}
+                          </p>
+                        )}
+                        
+                        {transport.details && (
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                            {transport.details}
+                          </p>
+                        )}
+                        
+                        {transport.cost && (
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Cost: {formatCurrency(parseInt(transport.cost.toString().replace(/[^\d]/g, '')))}
+                          </p>
+                        )}
+                        
+                        {transport.costPerDay && (
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Cost per day: {formatCurrency(parseInt(transport.costPerDay.toString().replace(/[^\d]/g, '')))}
+                          </p>
+                        )}
+                        
+                        {transport.totalCost && (
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Total cost: {formatCurrency(parseInt(transport.totalCost.toString().replace(/[^\d]/g, '')))}
+                          </p>
+                        )}
+                        
+                        {transport.route && (
+                          <NavigationButton location={transport.route} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
             {(activities && Array.isArray(activities) && activities.length > 0) && (
               <AccordionItem value="activities" className="border-b-2 border-primary/10">
                 <AccordionTrigger className="py-4 group">
@@ -368,7 +428,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           {activity.cost && (
                             <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                              Cost: {convertToRupees(activity.cost)}
+                              Cost: {formatCurrency(parseInt(activity.cost.toString().replace(/[^\d]/g, '') || '0'))}
                             </p>
                           )}
                           <NavigationButton location={activityName} />
@@ -415,7 +475,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           {activity.estimatedCost && (
                             <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                              Cost: {convertToRupees(activity.estimatedCost)}
+                              Cost: {formatCurrency(activity.estimatedCost)}
                             </p>
                           )}
                           <NavigationButton location={activity.name} />
@@ -458,7 +518,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {flight.price && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Price: {convertToRupees(flight.price)}
+                            Price: {formatCurrency(parseInt(flight.price.toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         {flight.departure && flight.arrival && (
@@ -504,9 +564,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {(accommodation.pricePerNight || accommodation.totalCost) && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            {accommodation.pricePerNight && `Price per night: ${convertToRupees(accommodation.pricePerNight)}`}
+                            {accommodation.pricePerNight && `Price per night: ${formatCurrency(parseInt(accommodation.pricePerNight.toString().replace(/[^\d]/g, '') || '0'))}`}
                             {accommodation.pricePerNight && accommodation.totalCost && ' | '}
-                            {accommodation.totalCost && `Total: ${convertToRupees(accommodation.totalCost)}`}
+                            {accommodation.totalCost && `Total: ${formatCurrency(parseInt(accommodation.totalCost.toString().replace(/[^\d]/g, '') || '0'))}`}
                           </p>
                         )}
                         <NavigationButton location={accommodation.location || accommodation.name} />
@@ -537,7 +597,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {attraction.estimatedCost && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Estimated cost: {convertToRupees(attraction.estimatedCost)}
+                            Estimated cost: {formatCurrency(parseInt(attraction.estimatedCost.toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         <NavigationButton location={attraction.name} />
@@ -623,6 +683,22 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           </div>
                         )}
                         
+                        {Array.isArray(day.transportation) && day.transportation.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Transportation:</p>
+                            <ul className="list-disc list-inside space-y-1 ml-2">
+                              {day.transportation.map((transport: any, transportIndex: number) => {
+                                const transportText = typeof transport === 'string' ? transport : JSON.stringify(transport);
+                                return (
+                                  <li key={transportIndex} className="text-sm text-slate-600 dark:text-slate-300 flex items-center">
+                                    <span>{transportText}</span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                        
                         {Array.isArray(day.meals) && day.meals.length > 0 && (
                           <div className="mt-2">
                             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Meals:</p>
@@ -669,7 +745,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 <AccordionTrigger className="py-4 group">
                   <div className="flex items-center">
                     <div className="bg-gradient-to-r from-teal-500 to-green-500 p-1.5 rounded-full text-white mr-2">
-                      <DollarSign className="h-5 w-5" />
+                      <IndianRupee className="h-5 w-5" />
                     </div>
                     <span className="group-hover:text-teal-600 dark:group-hover:text-teal-400">Budget Breakdown</span>
                   </div>
@@ -682,8 +758,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           <span className="capitalize text-slate-700 dark:text-slate-300">{category}</span>
                           <span className="font-medium text-teal-600 dark:text-teal-400">
                             {typeof cost === 'string' ? 
-                              cost.replace(/\$(\d+)/g, '₹$1') : 
-                              `₹${Number(cost).toLocaleString('en-IN')}`}
+                              formatCurrency(parseInt(cost.replace(/[^\d]/g, '') || '0')) : 
+                              formatCurrency(cost)}
                           </span>
                         </li>
                       ))}
