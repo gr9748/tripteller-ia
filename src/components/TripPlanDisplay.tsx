@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -7,12 +6,12 @@ import {
   Map,
   Utensils,
   Calendar,
-  DollarSign,
+  MapPin,
   Info,
   ArrowLeft,
-  MapPin,
   Navigation,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import { 
   Accordion,
@@ -25,6 +24,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface TripPlanDisplayProps {
   tripPlan: {
@@ -48,6 +50,22 @@ const getLocationQueryParam = (location: string) => {
   return encodeURIComponent(location);
 };
 
+const convertToRupees = (value: string | number | undefined): string => {
+  if (!value) return '₹0';
+  
+  if (typeof value === 'string') {
+    const numericValue = value.replace(/[^\d.]/g, '');
+    const amount = parseFloat(numericValue) * 75;
+    return `₹${amount.toLocaleString('en-IN')}`;
+  }
+  
+  if (typeof value === 'number') {
+    return `₹${(value * 75).toLocaleString('en-IN')}`;
+  }
+  
+  return '₹0';
+};
+
 const NavigationButton = ({ location }: { location: string }) => {
   if (!location) return null;
   
@@ -66,6 +84,94 @@ const NavigationButton = ({ location }: { location: string }) => {
       <MapPin className="h-3 w-3 mr-1" />
       Navigate
     </Button>
+  );
+};
+
+const FlightSearchDialog = ({ 
+  isOpen, 
+  onClose,
+  source,
+  destination,
+  startDate,
+  budget
+}: { 
+  isOpen: boolean, 
+  onClose: () => void,
+  source: string,
+  destination: string,
+  startDate: string,
+  budget: number
+}) => {
+  const [maxPrice, setMaxPrice] = useState(budget);
+  const [departDate, setDepartDate] = useState(startDate);
+  
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams({
+      curr: 'INR',
+      d1: source,
+      a1: destination,
+      date1: departDate,
+      maxprice: maxPrice.toString()
+    });
+    
+    const searchUrl = `https://www.google.com/travel/flights?${searchParams.toString()}`;
+    window.open(searchUrl, '_blank');
+    onClose();
+    toast.success('Opening flight search...');
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Search Flights</DialogTitle>
+          <DialogDescription>
+            Find flights within your budget and schedule
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="source">From</Label>
+              <Input id="source" value={source} readOnly className="bg-muted" />
+            </div>
+            <div>
+              <Label htmlFor="destination">To</Label>
+              <Input id="destination" value={destination} readOnly className="bg-muted" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">Departure Date</Label>
+              <Input 
+                id="date" 
+                type="date" 
+                value={departDate} 
+                onChange={(e) => setDepartDate(e.target.value)} 
+              />
+            </div>
+            <div>
+              <Label htmlFor="budget">Max Budget (₹)</Label>
+              <Input 
+                id="budget" 
+                type="number" 
+                value={maxPrice} 
+                onChange={(e) => setMaxPrice(parseInt(e.target.value))} 
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button onClick={handleSearch} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+            <Search className="h-4 w-4 mr-2" />
+            Search Flights
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -170,6 +276,8 @@ const LiveLocationButton = ({ destination }: { destination: string }) => {
 };
 
 const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) => {
+  const [isFlightDialogOpen, setIsFlightDialogOpen] = useState(false);
+  
   const {
     summary,
     flights,
@@ -219,8 +327,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
             {tripPlan.start_date} - {tripPlan.end_date}
           </span>
           <span className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4 text-green-500" />
-            Budget: ${tripPlan.budget}
+            <MapPin className="h-4 w-4 text-green-500" />
+            Budget: ₹{tripPlan.budget.toLocaleString('en-IN')}
           </span>
         </div>
       </div>
@@ -257,7 +365,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                             <p className="text-sm text-slate-600 dark:text-slate-300">{activity.description}</p>
                           )}
                           {activity.cost && (
-                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Cost: {activity.cost}</p>
+                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                              Cost: {convertToRupees(activity.cost)}
+                            </p>
                           )}
                           <NavigationButton location={activityName} />
                         </div>
@@ -302,7 +412,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                             <p className="text-sm text-slate-600 dark:text-slate-300">{activity.description}</p>
                           )}
                           {activity.estimatedCost && (
-                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Cost: {activity.estimatedCost}</p>
+                            <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                              Cost: {convertToRupees(activity.estimatedCost)}
+                            </p>
                           )}
                           <NavigationButton location={activity.name} />
                         </div>
@@ -324,6 +436,16 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-7">
+                    <div className="mb-3">
+                      <Button 
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                        onClick={() => setIsFlightDialogOpen(true)}
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Find Flights Within Your Budget
+                      </Button>
+                    </div>
+                    
                     {flights.map((flight: any, index: number) => (
                       <div key={index} className="border-l-2 border-sky-300 pl-4 py-2 bg-sky-50/50 rounded-r-lg dark:bg-sky-900/10 dark:border-sky-800">
                         <p className="font-medium text-sky-700 dark:text-sky-300">{flight.airline || 'Flight Option ' + (index + 1)}</p>
@@ -333,7 +455,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           </p>
                         )}
                         {flight.price && (
-                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Price: {flight.price}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Price: {convertToRupees(flight.price)}
+                          </p>
                         )}
                         {flight.departure && flight.arrival && (
                           <div className="flex gap-2 mt-2">
@@ -342,7 +466,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                               size="sm" 
                               className="text-xs h-7 px-2 bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800"
                               onClick={() => {
-                                const url = `https://www.google.com/flights?q=flights+from+${getLocationQueryParam(flight.departure)}+to+${getLocationQueryParam(flight.arrival)}`;
+                                const url = `https://www.google.com/flights?q=flights+from+${getLocationQueryParam(flight.departure)}+to+${getLocationQueryParam(flight.arrival)}&currency=INR`;
                                 window.open(url, '_blank');
                               }}
                             >
@@ -378,9 +502,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         )}
                         {(accommodation.pricePerNight || accommodation.totalCost) && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            {accommodation.pricePerNight && `Price per night: ${accommodation.pricePerNight}`}
+                            {accommodation.pricePerNight && `Price per night: ${convertToRupees(accommodation.pricePerNight)}`}
                             {accommodation.pricePerNight && accommodation.totalCost && ' | '}
-                            {accommodation.totalCost && `Total: ${accommodation.totalCost}`}
+                            {accommodation.totalCost && `Total: ${convertToRupees(accommodation.totalCost)}`}
                           </p>
                         )}
                         <NavigationButton location={accommodation.location || accommodation.name} />
@@ -410,7 +534,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           <p className="text-sm text-slate-600 dark:text-slate-300">{attraction.description}</p>
                         )}
                         {attraction.estimatedCost && (
-                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Estimated cost: {attraction.estimatedCost}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Estimated cost: {convertToRupees(attraction.estimatedCost)}
+                          </p>
                         )}
                         <NavigationButton location={attraction.name} />
                       </div>
@@ -439,7 +565,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           <p className="text-sm text-slate-600 dark:text-slate-300">Cuisine: {restaurant.cuisine}</p>
                         )}
                         {restaurant.priceRange && (
-                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">Price Range: {restaurant.priceRange}</p>
+                          <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
+                            Price Range: {restaurant.priceRange.replace(/\$/g, '₹')}
+                          </p>
                         )}
                         <NavigationButton location={restaurant.name} />
                       </div>
@@ -550,7 +678,11 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                       {Object.entries(budgetBreakdown).map(([category, cost]) => (
                         <li key={category} className="flex justify-between border-b border-teal-100 pb-1 dark:border-teal-800">
                           <span className="capitalize text-slate-700 dark:text-slate-300">{category}</span>
-                          <span className="font-medium text-teal-600 dark:text-teal-400">{typeof cost === 'string' ? cost : JSON.stringify(cost)}</span>
+                          <span className="font-medium text-teal-600 dark:text-teal-400">
+                            {typeof cost === 'string' ? 
+                              cost.replace(/\$(\d+)/g, '₹$1') : 
+                              `₹${Number(cost).toLocaleString('en-IN')}`}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -583,6 +715,15 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
           </Accordion>
         </div>
       </ScrollArea>
+      
+      <FlightSearchDialog 
+        isOpen={isFlightDialogOpen} 
+        onClose={() => setIsFlightDialogOpen(false)} 
+        source={tripPlan.source}
+        destination={tripPlan.destination}
+        startDate={tripPlan.start_date}
+        budget={tripPlan.budget}
+      />
     </motion.div>
   );
 };
