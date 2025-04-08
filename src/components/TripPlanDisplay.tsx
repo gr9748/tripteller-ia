@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,15 +13,13 @@ import {
   Navigation,
   Sparkles,
   Search,
-  DollarSign,
   IndianRupee,
   Train,
   Bus,
   Car,
   Truck,
   Ship,
-  Footprints,
-  Subway
+  Footprints
 } from 'lucide-react';
 import { 
   Accordion,
@@ -78,6 +77,22 @@ const NavigationButton = ({ location }: { location: string }) => {
       Navigate
     </Button>
   );
+};
+
+// Define the transportation icons map
+const transportationIcons: Record<string, React.ReactNode> = {
+  'flight': <Plane className="h-4 w-4" />,
+  'plane': <Plane className="h-4 w-4" />,
+  'train': <Train className="h-4 w-4" />,
+  'bus': <Bus className="h-4 w-4" />,
+  'car': <Car className="h-4 w-4" />,
+  'taxi': <Car className="h-4 w-4" />,
+  'ferry': <Ship className="h-4 w-4" />,
+  'ship': <Ship className="h-4 w-4" />,
+  'boat': <Ship className="h-4 w-4" />,
+  'walk': <Footprints className="h-4 w-4" />,
+  'metro': <Train className="h-4 w-4" />,
+  'tram': <Train className="h-4 w-4" />,
 };
 
 const getTransportationIcon = (type: string) => {
@@ -380,19 +395,19 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                         
                         {transport.cost && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Cost: {formatCurrency(parseInt(transport.cost.toString().replace(/[^\d]/g, '')))}
+                            Cost: {formatCurrency(parseInt(transport.cost.toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         
                         {transport.costPerDay && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Cost per day: {formatCurrency(parseInt(transport.costPerDay.toString().replace(/[^\d]/g, '')))}
+                            Cost per day: {formatCurrency(parseInt(transport.costPerDay.toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         
                         {transport.totalCost && (
                           <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                            Total cost: {formatCurrency(parseInt(transport.totalCost.toString().replace(/[^\d]/g, '')))}
+                            Total cost: {formatCurrency(parseInt(transport.totalCost.toString().replace(/[^\d]/g, '') || '0'))}
                           </p>
                         )}
                         
@@ -419,7 +434,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                 <AccordionContent>
                   <div className="space-y-3 pl-7">
                     {activities.map((activity: any, index: number) => {
-                      const activityName = typeof activity === 'string' ? activity : activity.name;
+                      const activityName = typeof activity === 'string' ? activity : (activity.name || '');
                       return (
                         <div key={index} className="border-l-2 border-pink-300 pl-4 py-2 bg-pink-50/50 rounded-r-lg dark:bg-pink-900/10 dark:border-pink-800">
                           <p className="font-medium text-pink-700 dark:text-pink-300">{activityName}</p>
@@ -475,7 +490,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           )}
                           {activity.estimatedCost && (
                             <p className="text-sm font-medium mt-1 text-emerald-600 dark:text-emerald-400">
-                              Cost: {formatCurrency(activity.estimatedCost)}
+                              Cost: {formatCurrency(Number(activity.estimatedCost))}
                             </p>
                           )}
                           <NavigationButton location={activity.name} />
@@ -759,7 +774,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
                           <span className="font-medium text-teal-600 dark:text-teal-400">
                             {typeof cost === 'string' ? 
                               formatCurrency(parseInt(cost.replace(/[^\d]/g, '') || '0')) : 
-                              formatCurrency(cost)}
+                              formatCurrency(Number(cost || 0))}
                           </span>
                         </li>
                       ))}
@@ -807,3 +822,4 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
 };
 
 export default TripPlanDisplay;
+
