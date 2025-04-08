@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Plane, Building2, Map, Utensils, Calendar, MapPin, Sparkles, Search } from 'lucide-react';
 import { 

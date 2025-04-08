@@ -23,12 +23,17 @@ export function formatDate(dateString: string): string {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  } catch (error) {
+    console.error('Error formatting currency:', error);
+    return `₹${amount}`;
+  }
 }
 
 export function truncateText(text: string, maxLength: number = 100): string {

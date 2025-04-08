@@ -12,8 +12,12 @@ export const NavigationButton: React.FC<NavigationButtonProps> = ({ location }) 
   if (!location) return null;
   
   const handleNavigate = () => {
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(location)}`;
-    window.open(googleMapsUrl, '_blank');
+    try {
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${getLocationQueryParam(location)}`;
+      window.open(googleMapsUrl, '_blank');
+    } catch (error) {
+      console.error('Error navigating to location:', error);
+    }
   };
   
   return (
