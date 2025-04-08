@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Lock, GlobeCheck } from 'lucide-react';
+import { Shield, Lock, Globe } from 'lucide-react';
 
 interface WelcomeSectionProps {
   username: string;
@@ -54,7 +54,7 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ username }) => {
             
             <div className="flex items-start space-x-3">
               <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full">
-                <GlobeCheck className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <Globe className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <h3 className="font-medium text-purple-700 dark:text-purple-400">Global Coverage</h3>
