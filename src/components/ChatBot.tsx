@@ -1,13 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { X, Send, MessageCircle, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import ChatHeader from './chat/ChatHeader';
+import ChatInput from './chat/ChatInput';
+import ChatMessage from './chat/ChatMessage';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -17,7 +18,6 @@ interface ChatMessage {
 
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -45,11 +45,7 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!message.trim()) return;
-    
+  const handleSendMessage = async (message: string) => {
     // Add user message to chat
     const userMessage: ChatMessage = {
       role: 'user',
@@ -58,7 +54,6 @@ const ChatBot: React.FC = () => {
     };
     
     setChatHistory(prev => [...prev, userMessage]);
-    setMessage('');
     setIsLoading(true);
     
     try {
@@ -71,7 +66,7 @@ const ChatBot: React.FC = () => {
       // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('chatbot', {
         body: {
-          message: message.trim(),
+          message: message,
           chatHistory: apiChatHistory
         }
       });
@@ -136,18 +131,7 @@ const ChatBot: React.FC = () => {
           >
             <Card className="flex flex-col h-[500px] shadow-xl border border-indigo-200 dark:border-indigo-800 overflow-hidden">
               {/* Chat Header */}
-              <div className="p-3 border-b bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8 border-2 border-white/50">
-                    <AvatarImage src="/placeholder.svg" alt="Odyssique" />
-                    <AvatarFallback className="bg-indigo-100 text-indigo-700">OD</AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">Odyssique</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-white/10">
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <ChatHeader onClose={toggleChat} />
 
               {/* Chat Messages */}
               <div 
@@ -155,23 +139,12 @@ const ChatBot: React.FC = () => {
                 ref={chatContainerRef}
               >
                 {chatHistory.map((chat, index) => (
-                  <div
+                  <ChatMessage
                     key={index}
-                    className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`max-w-[80%] px-4 py-2 rounded-lg ${
-                        chat.role === 'user' 
-                          ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white' 
-                          : 'bg-white dark:bg-gray-800 shadow-sm border border-indigo-100 dark:border-indigo-800/50'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{chat.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {chat.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
+                    role={chat.role}
+                    content={chat.content}
+                    timestamp={chat.timestamp}
+                  />
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
@@ -184,29 +157,7 @@ const ChatBot: React.FC = () => {
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSubmit} className="p-3 border-t bg-white dark:bg-gray-900 flex items-end space-x-2">
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="resize-none min-h-[60px] max-h-[120px] border-indigo-200 dark:border-indigo-800 focus-visible:ring-indigo-500"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                <Button 
-                  type="submit" 
-                  size="icon"
-                  disabled={!message.trim() || isLoading}
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
+              <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
             </Card>
           </motion.div>
         )}

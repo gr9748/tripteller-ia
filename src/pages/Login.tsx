@@ -37,9 +37,10 @@ const Login: React.FC = () => {
     
     try {
       await login(email, password);
-    } catch (error) {
+      // No need to manually navigate as the AuthContext handles this
+    } catch (error: any) {
       console.error('Login error:', error);
-      // Error is already handled in the login function
+      // Error handling is already in the login function
     } finally {
       setIsSubmitting(false);
     }

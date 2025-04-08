@@ -27,43 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in initially
-    const checkAuth = async () => {
-      try {
-        // First check Supabase session
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          localStorage.removeItem('user');
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        
-        if (sessionData.session) {
-          // If we have a valid session, use stored user data or fetch it
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          }
-        } else {
-          // No valid session, clear user data
-          localStorage.removeItem('user');
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-        localStorage.removeItem('user');
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-    
-    // Set up auth state change listener
+    // Set up auth state change listener first
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
       if (event === 'SIGNED_OUT') {
@@ -80,6 +44,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(userData);
       }
     });
+
+    // Then check current session
+    const checkAuth = async () => {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          localStorage.removeItem('user');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        if (sessionData.session) {
+          // If we have a valid session, use stored user data or fetch it
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            // If no stored user but we have a session, create user data
+            const userData = {
+              id: sessionData.session.user.id,
+              email: sessionData.session.user.email || '',
+              name: sessionData.session.user.email ? sessionData.session.user.email.split('@')[0] : 'User',
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+          }
+        } else {
+          // No valid session, clear user data
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -113,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Login process error:', error);
-      toast.error('Login failed');
       throw error;
     } finally {
       setLoading(false);
@@ -152,7 +159,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Signup process error:', error);
-      toast.error('Signup failed');
       throw error;
     } finally {
       setLoading(false);
