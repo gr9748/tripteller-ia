@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -11,7 +12,8 @@ import {
   ArrowLeft,
   Navigation,
   Sparkles,
-  Search
+  Search,
+  DollarSign
 } from 'lucide-react';
 import { 
   Accordion,
