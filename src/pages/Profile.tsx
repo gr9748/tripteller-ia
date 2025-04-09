@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Save } from 'lucide-react';
+import { User, Mail, Save, Upload, Camera } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +45,8 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 const Profile: React.FC = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<ProfileFormValues>({
@@ -69,8 +71,36 @@ const Profile: React.FC = () => {
         name: user.name || '',
         email: user.email || '',
       });
+      
+      // Set avatar URL
+      if (user.id) {
+        fetchUserAvatar(user.id);
+      }
     }
   }, [user, form]);
+  
+  const fetchUserAvatar = async (userId: string) => {
+    try {
+      const { data: avatarData, error: avatarError } = await supabase
+        .storage
+        .from('avatars')
+        .download(`${userId}.png`);
+        
+      if (avatarError) {
+        if (avatarError.message !== 'The resource was not found') {
+          console.error('Error fetching avatar:', avatarError);
+        }
+        return;
+      }
+      
+      if (avatarData) {
+        const url = URL.createObjectURL(avatarData);
+        setAvatarUrl(url);
+      }
+    } catch (error) {
+      console.error('Error fetching user avatar:', error);
+    }
+  };
 
   const onSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -101,6 +131,40 @@ const Profile: React.FC = () => {
       setLoading(false);
     }
   };
+  
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+      
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}.png`;
+      
+      // Upload the file to Supabase storage
+      const { error: uploadError } = await supabase
+        .storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Fetch the new avatar
+      fetchUserAvatar(user?.id || '');
+      toast.success('Avatar updated successfully');
+      
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Error uploading avatar');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -125,10 +189,34 @@ const Profile: React.FC = () => {
             <Card className="shadow-lg">
               <CardHeader className="text-center">
                 <div className="flex justify-center mb-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user?.email}`} alt={user?.name} />
-                    <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <div className="relative group">
+                    <Avatar className="h-20 w-20">
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} alt={user?.name} />
+                      ) : (
+                        <AvatarImage src={`https://avatar.vercel.sh/${user?.email}`} alt={user?.name} />
+                      )}
+                      <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <label htmlFor="avatar-upload" className="cursor-pointer">
+                        <Camera className="h-6 w-6 text-white" />
+                        <input
+                          id="avatar-upload"
+                          type="file"
+                          accept="image/*"
+                          className="sr-only"
+                          onChange={uploadAvatar}
+                          disabled={uploading}
+                        />
+                      </label>
+                    </div>
+                    {uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full">
+                        <div className="h-5 w-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <CardTitle>Profile</CardTitle>
                 <CardDescription>View and edit your profile information</CardDescription>

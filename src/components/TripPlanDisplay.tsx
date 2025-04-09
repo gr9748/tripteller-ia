@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FlightSearchDialog } from './trip-display/FlightSearchDialog';
@@ -7,6 +7,7 @@ import { LiveLocationButton } from './trip-display/LiveLocationButton';
 import { AccordionSections } from './trip-display/AccordionSections';
 import { TripSummary } from './trip-display/TripSummary';
 import { TripPlanHeader } from './trip-display/TripPlanHeader';
+import { TripDestinationImages } from './trip-display/TripDestinationImages';
 
 interface TripPlanDisplayProps {
   tripPlan: {
@@ -58,6 +59,8 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
     >
       <TripPlanHeader destination={tripPlan.destination} onBack={onBack} />
 
+      <TripDestinationImages destination={tripPlan.destination} />
+
       <TripSummary 
         destination={tripPlan.destination}
         startDate={tripPlan.start_date}
@@ -68,7 +71,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
 
       <LiveLocationButton destination={tripPlan.destination} />
       
-      <ScrollArea className="h-[calc(100vh-430px)] pr-4 -mr-4 mt-4">
+      <ScrollArea className="h-[calc(100vh-520px)] pr-4 -mr-4 mt-4">
         <AccordionSections 
           transportationArray={transportationArray}
           activitiesArray={activitiesArray}
