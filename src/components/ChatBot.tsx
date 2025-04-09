@@ -1,14 +1,14 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, X, Loader2 } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
-import ChatMessage from './chat/ChatMessage';
+import ChatContainer from './chat/ChatContainer';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -20,15 +20,7 @@ const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  // Scroll to bottom of chat when new messages are added
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [chatHistory]);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -38,7 +30,7 @@ const ChatBot: React.FC = () => {
       setChatHistory([
         {
           role: 'assistant',
-          content: 'Hello! I\'m Odyssique, your travel companion. I can help you discover hotels, restaurants, and attractions worldwide. How can I assist with your travel plans today?',
+          content: 'Hello! I\'m Odyssique, your travel companion. How can I help with your travel plans today?',
           timestamp: new Date()
         }
       ]);
@@ -134,27 +126,7 @@ const ChatBot: React.FC = () => {
               <ChatHeader onClose={toggleChat} />
 
               {/* Chat Messages */}
-              <div 
-                className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20"
-                ref={chatContainerRef}
-              >
-                {chatHistory.map((chat, index) => (
-                  <ChatMessage
-                    key={index}
-                    role={chat.role}
-                    content={chat.content}
-                    timestamp={chat.timestamp}
-                  />
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[80%] px-4 py-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-indigo-100 dark:border-indigo-800/50 flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-                      <p className="text-sm">Thinking...</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ChatContainer chatHistory={chatHistory} isLoading={isLoading} />
 
               {/* Chat Input */}
               <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />

@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { TripFormData } from './useTripFormState';
 
+// Define types for trip plan
 export interface TripPlan {
   id: string;
   user_id: string;
@@ -24,11 +25,11 @@ export interface TripPlan {
 // Default AI response for fallback/error cases
 const defaultAiResponse = {
   summary: "Your personalized trip plan",
-  flights: [{ airline: "Sample Airline", price: "$500", departure: "Your Location", arrival: "Destination" }],
-  accommodations: [{ name: "Hotel Example", location: "City Center", pricePerNight: "$100", totalCost: "$400" }],
-  attractions: [{ name: "Famous Landmark", description: "A beautiful place to visit", estimatedCost: "$0" }],
-  restaurants: [{ name: "Local Cuisine", cuisine: "Traditional", priceRange: "$$" }],
-  transportation: [{ type: "Public Transit", cost: "$20" }],
+  flights: [{ airline: "Sample Airline", price: "₹37,500", departure: "Your Location", arrival: "Destination" }],
+  accommodations: [{ name: "Hotel Example", location: "City Center", pricePerNight: "₹7,500", totalCost: "₹30,000" }],
+  attractions: [{ name: "Famous Landmark", description: "A beautiful place to visit", estimatedCost: "₹0" }],
+  restaurants: [{ name: "Local Cuisine", cuisine: "Traditional", priceRange: "₹₹" }],
+  transportation: [{ type: "Public Transit", cost: "₹1,500" }],
   itinerary: [
     { 
       day: 1, 
@@ -37,9 +38,16 @@ const defaultAiResponse = {
       notes: "Rest after travel"
     }
   ],
-  budgetBreakdown: { flights: "$500", accommodations: "$400", food: "$200", activities: "$100", transportation: "$50", total: "$1250" },
+  budgetBreakdown: { 
+    flights: "₹37,500", 
+    accommodations: "₹30,000", 
+    food: "₹15,000", 
+    activities: "₹7,500", 
+    transportation: "₹3,750", 
+    total: "₹93,750" 
+  },
   tips: ["Book in advance", "Learn basic local phrases", "Check weather before packing"],
-  activities: [{ name: "City Tour", description: "Explore the local area", cost: "$30" }]
+  activities: [{ name: "City Tour", description: "Explore the local area", cost: "₹2,250" }]
 };
 
 export const useTripFormSubmit = (resetForm: () => void) => {
@@ -97,7 +105,14 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       
       toast.info('Generating your personalized trip plan...');
       
-      // Add some logging to debug
+      // Ensure budget is a valid number
+      const budgetValue = parseFloat(formData.budget);
+      if (isNaN(budgetValue) || budgetValue <= 0) {
+        toast.error('Please enter a valid budget amount');
+        setIsSubmitting(false);
+        return;
+      }
+      
       console.log('Preparing request with token length:', token.length);
       
       const { data, error } = await supabase.functions.invoke('generate-trip-plan', {
@@ -106,7 +121,7 @@ export const useTripFormSubmit = (resetForm: () => void) => {
           destination: formData.destination,
           startDate: formData.startDate,
           endDate: formData.endDate,
-          budget: parseFloat(formData.budget),
+          budget: budgetValue,
           travelers: parseInt(formData.travelers),
           interests: formData.interests
         },
@@ -164,6 +179,9 @@ export const useTripFormSubmit = (resetForm: () => void) => {
           }
         }
         
+        // Ensure all monetary values use the ₹ symbol and not $
+        sanitizeCurrencyValues(data.tripPlan.ai_response);
+        
         setGeneratedTripPlan(data.tripPlan);
       }
       
@@ -175,6 +193,45 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  // Helper function to ensure all monetary values use ₹ symbol
+  const sanitizeCurrencyValues = (aiResponse: any) => {
+    if (!aiResponse) return;
+    
+    // Process budget breakdown
+    if (aiResponse.budgetBreakdown) {
+      Object.keys(aiResponse.budgetBreakdown).forEach(key => {
+        const value = aiResponse.budgetBreakdown[key];
+        if (typeof value === 'string' && value.includes('$')) {
+          aiResponse.budgetBreakdown[key] = value.replace(/\$/g, '₹');
+        }
+      });
+    }
+    
+    // Process arrays of objects with cost properties
+    ['flights', 'accommodations', 'attractions', 'transportation', 'activities'].forEach(category => {
+      if (Array.isArray(aiResponse[category])) {
+        aiResponse[category].forEach((item: any) => {
+          Object.keys(item).forEach(key => {
+            if (typeof item[key] === 'string' && 
+                (key.toLowerCase().includes('cost') || key.toLowerCase().includes('price')) && 
+                item[key].includes('$')) {
+              item[key] = item[key].replace(/\$/g, '₹');
+            }
+          });
+        });
+      }
+    });
+    
+    // Process restaurants price range
+    if (Array.isArray(aiResponse.restaurants)) {
+      aiResponse.restaurants.forEach((restaurant: any) => {
+        if (restaurant.priceRange && restaurant.priceRange.includes('$')) {
+          restaurant.priceRange = restaurant.priceRange.replace(/\$/g, '₹');
+        }
+      });
     }
   };
 

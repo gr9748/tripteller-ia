@@ -22,14 +22,20 @@ export function formatDate(dateString: string): string {
   }
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | string | undefined | null): string {
+  if (amount === undefined || amount === null) return '₹0';
+  
   try {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    if (isNaN(numericAmount)) return '₹0';
+    
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(numericAmount);
   } catch (error) {
     console.error('Error formatting currency:', error);
     return `₹${amount}`;
@@ -41,27 +47,36 @@ export function truncateText(text: string, maxLength: number = 100): string {
   return text.slice(0, maxLength) + '...';
 }
 
-export function convertToRupees(value: string | number | undefined): string {
-  if (!value) return '₹0';
+export function convertToRupees(value: string | number | undefined | null): string {
+  if (value === undefined || value === null) return '₹0';
   
-  if (typeof value === 'string') {
-    // Remove any non-numeric characters except for dots
-    const numericValue = value.replace(/[^\d.]/g, '');
-    if (numericValue === '') return '₹0';
+  try {
+    // Convert to a number first
+    let numericValue: number;
     
-    // Convert to rupees (assuming dollar values need to be multiplied by 75)
-    // This is a simplification - real currency conversion would use current rates
-    const amount = parseFloat(numericValue) * 75;
-    return `₹${Math.round(amount).toLocaleString('en-IN')}`;
+    if (typeof value === 'string') {
+      // Remove any non-numeric characters except for dots
+      const cleanedValue = value.replace(/[^\d.]/g, '');
+      if (cleanedValue === '') return '₹0';
+      numericValue = parseFloat(cleanedValue);
+    } else {
+      numericValue = value;
+    }
+    
+    if (isNaN(numericValue)) return '₹0';
+    
+    // Convert to rupees (using current approximate exchange rate)
+    const inrAmount = Math.round(numericValue * 75);
+    
+    // Format the number with commas for thousands
+    return `₹${inrAmount.toLocaleString('en-IN')}`;
+  } catch (error) {
+    console.error('Error converting to rupees:', error);
+    return '₹0';
   }
-  
-  if (typeof value === 'number') {
-    return `₹${Math.round(value * 75).toLocaleString('en-IN')}`;
-  }
-  
-  return '₹0';
 }
 
 export function getLocationQueryParam(location: string): string {
+  if (!location) return '';
   return encodeURIComponent(location);
 }

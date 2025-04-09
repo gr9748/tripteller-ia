@@ -29,9 +29,6 @@ serve(async (req) => {
       );
     }
 
-    console.log("Received chat message:", message);
-    console.log("Chat history length:", chatHistory?.length || 0);
-
     if (!googleApiKey) {
       console.error("Missing GOOGLE_AI_API_KEY");
       return new Response(
@@ -43,39 +40,20 @@ serve(async (req) => {
     // Format the conversation history for Gemini
     const formattedMessages = [];
     
-    // Add system prompt with enhanced travel knowledge and website knowledge
+    // Add system prompt with enhanced travel knowledge - simplified and concise
     formattedMessages.push({
       role: "model",
-      parts: [{ text: `You are Odyssique, an expert travel assistant with comprehensive knowledge of hotels, restaurants, and tourist attractions worldwide. 
-
-ABOUT THIS WEBSITE:
-This website is called Odyssique, a travel planning platform with the following features:
-1. Trip Planner: Users can create personalized travel plans by entering their source, destination, dates, budget, and number of travelers.
-2. Previous Plans: Users can view, use again, or delete their previously created travel plans.
-3. Travel Chat: Users can chat with you (Odyssique AI) to get travel advice, suggestions, and answers to their queries.
-
-WEBSITE NAVIGATION GUIDE:
-- Home Page: Shows welcome information and options to create a new trip plan
-- Trip Planner: Where users create new travel plans with AI assistance
-- My Plans: Where users can view their previously created plans
-- Profile: Where users can manage their account details
-- Login/Signup: For user authentication
+      parts: [{ text: `You are Odyssique, a travel assistant for the Odyssique travel planning platform.
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 1. DO NOT use asterisks (*) for emphasis or formatting.
-2. Instead, use clear sentence structure and conversational tone.
-3. For important information, start sentences with phrases like "Important:" or "Note:".
-4. Use line breaks instead of bullet points when listing items.
-5. Keep your responses conversational and friendly.
-6. When mentioning prices, always use Indian Rupees (₹).
+2. Use clear sentence structure and be concise.
+3. For important information, use phrases like "Note:" or "Important:".
+4. Keep your responses short and to-the-point.
+5. When mentioning prices, always use Indian Rupees (₹).
+6. Try to respond in 2-3 sentences when possible.
 
-You provide detailed information about accommodations including luxury resorts, boutique hotels, and budget-friendly options. You know about all modes of transportation including flights, trains, buses, car rentals, taxis, ferries, and local transit options. You can recommend tourist attractions including historical sites, natural wonders, museums, local experiences, and hidden gems across the globe. All pricing is in Indian Rupees (₹).
-
-If users ask about how to use the website or navigate features, provide clear instructions. For example, if they ask "How do I create a plan?", explain that they need to go to the Trip Planner and fill in details like destination, dates, budget, etc.
-
-If users ask questions like "navigate this website" or "how do I use this site", explain all the main features of the website and how to access them.
-
-Keep your responses friendly, personalized, and informative while maintaining a sophisticated tone. Your goal is to help users plan the perfect trip tailored to their preferences and help them navigate the Odyssique website efficiently.` }]
+Keep your answers friendly and helpful, but brief. If users ask about website navigation, explain the relevant feature concisely.` }]
     });
     
     // Add conversation history if provided
@@ -101,7 +79,7 @@ Keep your responses friendly, personalized, and informative while maintaining a 
       parts: [{ text: message }]
     });
 
-    // Call the Gemini API
+    // Call the Gemini API with temperature reduced to make responses more concise
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
       method: "POST",
       headers: {
@@ -111,14 +89,13 @@ Keep your responses friendly, personalized, and informative while maintaining a 
       body: JSON.stringify({
         contents: formattedMessages,
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800,
+          temperature: 0.5, // Reduced temperature
+          maxOutputTokens: 500, // Reduced token limit for more concise responses
         },
       }),
     });
 
     const data = await response.json();
-    console.log("Received response from Gemini API");
 
     // Extract the response text from Gemini
     let responseText = "";
