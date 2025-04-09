@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,7 +6,7 @@ import { LiveLocationButton } from './trip-display/LiveLocationButton';
 import { AccordionSections } from './trip-display/AccordionSections';
 import { TripSummary } from './trip-display/TripSummary';
 import { TripPlanHeader } from './trip-display/TripPlanHeader';
-import { TripDestinationImages } from './trip-display/TripDestinationImages';
+import { TripDestinationImages } from './TripDestinationImages';
 
 interface TripPlanDisplayProps {
   tripPlan: {
