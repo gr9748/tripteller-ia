@@ -1,5 +1,5 @@
 
-import { useState, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { toast } from 'sonner';
 
 export interface TripFormData {
@@ -22,6 +22,32 @@ export const useTripFormState = () => {
     travelers: '1',
     interests: ''
   });
+
+  // Check for reused trip plan data on component mount
+  useEffect(() => {
+    try {
+      const savedPlanData = sessionStorage.getItem('reuseTripPlan');
+      if (savedPlanData) {
+        const planData = JSON.parse(savedPlanData);
+        
+        setFormData({
+          source: planData.source || '',
+          destination: planData.destination || '',
+          startDate: planData.startDate || '',
+          endDate: planData.endDate || '',
+          budget: planData.budget || '',
+          travelers: planData.travelers || '1',
+          interests: planData.interests || ''
+        });
+        
+        // Clear the saved data after loading it
+        sessionStorage.removeItem('reuseTripPlan');
+        toast.success('Previous trip plan loaded successfully!');
+      }
+    } catch (error) {
+      console.error('Error loading saved trip plan:', error);
+    }
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

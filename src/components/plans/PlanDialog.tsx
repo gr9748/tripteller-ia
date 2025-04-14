@@ -48,10 +48,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
         interests: plan.interests || ''
       }));
       
-      // Navigate to home page and signal to reload form with this data
+      // Navigate to home page
       onClose(); // Close dialog first
       navigate('/'); // Then navigate
-      toast.success('Plan loaded! Ready to customize your trip.');
+      
+      // Show success toast with slight delay to ensure it appears after navigation
+      setTimeout(() => {
+        toast.success('Plan loaded! Ready to customize your trip.');
+      }, 100);
     } catch (error) {
       console.error('Error using plan again:', error);
       toast.error('Failed to load plan. Please try again.');

@@ -33,6 +33,12 @@ const Navbar = () => {
     setMenuOpen(prev => !prev);
   };
 
+  // Get user metadata safely
+  const userMetadata = user?.user_metadata || {};
+  const userFullName = userMetadata.full_name || '';
+  const userAvatarUrl = userMetadata.avatar_url || '';
+  const userEmail = user?.email || '';
+
   return (
     <nav className="py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
       <div className="container mx-auto flex justify-between items-center">
@@ -91,9 +97,9 @@ const Navbar = () => {
                 className="p-0 h-10 w-10 rounded-full"
               >
                 <Avatar className="h-9 w-9 ring-2 ring-offset-2 ring-indigo-500 dark:ring-indigo-400">
-                  <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+                  <AvatarImage src={userAvatarUrl} />
                   <AvatarFallback className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                    {getInitials(user?.user_metadata?.full_name || user?.email)}
+                    {getInitials(userFullName || userEmail)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
