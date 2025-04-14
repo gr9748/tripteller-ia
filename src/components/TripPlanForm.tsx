@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { TripFormLocation } from '@/components/trip-form/TripFormLocation';
 import { TripFormDates } from '@/components/trip-form/TripFormDates';
@@ -17,7 +16,7 @@ const TripPlanForm = () => {
     setFormData,
     handleChange,
     resetForm,
-    isValidForm,
+    isValidForm
   } = useTripFormState();
 
   const {

@@ -36,21 +36,26 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
   };
 
   const handleUsePlan = () => {
-    // Store the selected plan in sessionStorage for the home page to use
-    sessionStorage.setItem('reuseTripPlan', JSON.stringify({
-      source: plan.source,
-      destination: plan.destination,
-      startDate: plan.start_date,
-      endDate: plan.end_date,
-      budget: plan.budget.toString(),
-      travelers: plan.travelers.toString(),
-      interests: plan.interests || ''
-    }));
-    
-    // Navigate to home page and signal to reload form with this data
-    navigate('/');
-    toast.success('Plan loaded! Ready to customize your trip.');
-    onClose();
+    try {
+      // Store the selected plan in sessionStorage for the home page to use
+      sessionStorage.setItem('reuseTripPlan', JSON.stringify({
+        source: plan.source,
+        destination: plan.destination,
+        startDate: plan.start_date,
+        endDate: plan.end_date,
+        budget: plan.budget.toString(),
+        travelers: plan.travelers.toString(),
+        interests: plan.interests || ''
+      }));
+      
+      // Navigate to home page and signal to reload form with this data
+      onClose(); // Close dialog first
+      navigate('/'); // Then navigate
+      toast.success('Plan loaded! Ready to customize your trip.');
+    } catch (error) {
+      console.error('Error using plan again:', error);
+      toast.error('Failed to load plan. Please try again.');
+    }
   };
 
   return (

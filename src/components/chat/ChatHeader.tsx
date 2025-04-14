@@ -2,7 +2,6 @@
 import React from 'react';
 import { X, MessageSquare, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 interface ChatHeaderProps {
   onClose: () => void;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, MapPin, IndianRupee, Users, Heart } from 'lucide-react';
+import { Calendar, MapPin, IndianRupee, Users, Heart, Star } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -35,7 +35,7 @@ export const TripSummary: React.FC<TripSummaryProps> = ({
               {destination}
             </h3>
             <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-none">
-              Adventure Awaits
+              TripTales Adventure
             </Badge>
           </div>
           
@@ -61,11 +61,17 @@ export const TripSummary: React.FC<TripSummaryProps> = ({
           <div className="absolute right-4 top-4">
             <Heart className="h-5 w-5 text-pink-400/30 dark:text-pink-400/20" />
           </div>
+          <div className="absolute -right-12 -bottom-12 w-24 h-24 bg-indigo-500/5 rounded-full"></div>
+          <div className="absolute left-8 -bottom-10 opacity-10">
+            <Star className="h-16 w-16 text-amber-400/30" />
+          </div>
           <h4 className="font-medium text-purple-700 dark:text-purple-400 mb-2 flex items-center gap-2">
             <span className="h-1 w-4 bg-purple-400 rounded-full"></span>
             Your TripTale
           </h4>
-          <p className="leading-relaxed whitespace-pre-line text-sm">{summary}</p>
+          <p className="leading-relaxed whitespace-pre-line text-sm relative z-10">
+            {summary}
+          </p>
         </div>
       )}
     </>

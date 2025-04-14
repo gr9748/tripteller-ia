@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, X, MapPin, Sparkles } from 'lucide-react';
+import { MessageCircle, X, MapPin, Sparkles, Plane } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ChatHeader from './chat/ChatHeader';
@@ -26,6 +26,10 @@ const travelQuotes = [
   "The journey, not the arrival, matters. 🛤️",
   "Travel far, travel wide, travel deep! 🌄",
   "Not all who wander are lost! 🧗‍♀️",
+  "Travel opens your heart, broadens your mind and fills your life with stories to tell! 🌍",
+  "The world is a book and those who do not travel read only one page! 📖",
+  "Twenty years from now you will be more disappointed by the things you didn't do than by the ones you did do! 🚀",
+  "Take only memories, leave only footprints! 👣",
 ];
 
 const ChatBot: React.FC = () => {
@@ -51,6 +55,22 @@ const ChatBot: React.FC = () => {
     };
   }, [isOpen, chatHistory.length]);
   
+  // Show a random tip after opening chat and waiting 30 seconds
+  useEffect(() => {
+    let tipTimeout: number;
+    
+    if (isOpen && chatHistory.length > 1) {
+      tipTimeout = window.setTimeout(() => {
+        setShowTravelTip(true);
+        setTimeout(() => setShowTravelTip(false), 6000);
+      }, 30 * 1000); // 30 seconds
+    }
+    
+    return () => {
+      if (tipTimeout) window.clearTimeout(tipTimeout);
+    };
+  }, [isOpen]);
+  
   const toggleChat = () => {
     setIsOpen(!isOpen);
     
@@ -59,7 +79,7 @@ const ChatBot: React.FC = () => {
       setChatHistory([
         {
           role: 'assistant',
-          content: "Hello traveler! ✨ I'm your TripTales guide. How can I make your travel planning magical today? Ask me about destinations, budgets, or travel tips!",
+          content: "Hello traveler! ✨ I'm your TripTales assistant. How can I make your travel planning magical today? Ask me about destinations, budgets, or travel tips!",
           timestamp: new Date()
         }
       ]);
@@ -121,6 +141,58 @@ const ChatBot: React.FC = () => {
     return travelQuotes[Math.floor(Math.random() * travelQuotes.length)];
   };
 
+  // Animated icons that float around the chat button when closed
+  const FloatingIcons = () => {
+    return (
+      <div className="absolute w-32 h-32 -top-10 -right-10">
+        <motion.div
+          className="absolute"
+          animate={{
+            x: [0, 15, 0],
+            y: [0, -15, 0],
+          }}
+          transition={{
+            duration: 4,
+            ease: "easeInOut",
+            repeat: Infinity,
+          }}
+        >
+          <Plane className="text-indigo-400 h-4 w-4" />
+        </motion.div>
+        <motion.div
+          className="absolute top-12 left-2"
+          animate={{
+            x: [0, -10, 0],
+            y: [0, 10, 0],
+          }}
+          transition={{
+            duration: 3.5,
+            ease: "easeInOut",
+            repeat: Infinity,
+            delay: 0.5,
+          }}
+        >
+          <MapPin className="text-rose-400 h-3 w-3" />
+        </motion.div>
+        <motion.div
+          className="absolute top-6 left-12"
+          animate={{
+            x: [0, 5, 0],
+            y: [0, 5, 0],
+          }}
+          transition={{
+            duration: 2.5,
+            ease: "easeInOut",
+            repeat: Infinity,
+            delay: 1,
+          }}
+        >
+          <Sparkles className="text-amber-400 h-3 w-3" />
+        </motion.div>
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Travel tip toast */}
@@ -148,6 +220,7 @@ const ChatBot: React.FC = () => {
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       >
+        {!isOpen && <FloatingIcons />}
         <Button
           onClick={toggleChat}
           className="rounded-full w-14 h-14 p-0 bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg hover:from-indigo-700 hover:to-purple-700"

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FlightSearchDialog } from './trip-display/FlightSearchDialog';
@@ -56,6 +57,9 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
       transition={{ duration: 0.3 }}
       className="p-4 border rounded-lg bg-gradient-to-br from-slate-50 to-blue-50 backdrop-blur-sm shadow-sm dark:from-slate-900 dark:to-blue-900/30"
     >
+      <div className="absolute -z-10 w-[300px] h-[300px] bg-gradient-to-br from-purple-500/20 to-indigo-500/10 rounded-full blur-3xl top-12 -right-32 opacity-40"></div>
+      <div className="absolute -z-10 w-[250px] h-[250px] bg-gradient-to-tr from-blue-500/20 to-sky-400/10 rounded-full blur-3xl bottom-32 -left-24 opacity-30"></div>
+      
       <TripPlanHeader destination={tripPlan.destination} onBack={onBack} />
 
       <TripDestinationImages destination={tripPlan.destination} />
@@ -66,6 +70,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
         endDate={tripPlan.end_date}
         budget={tripPlan.budget}
         summary={summary}
+        travelers={tripPlan.travelers}
       />
 
       <LiveLocationButton destination={tripPlan.destination} />
