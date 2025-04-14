@@ -114,6 +114,14 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       }
       
       console.log('Preparing request with token length:', token.length);
+      console.log('Trip request data:', {
+        source: formData.source,
+        destination: formData.destination,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        budget: budgetValue,
+        travelers: parseInt(formData.travelers)
+      });
       
       const { data, error } = await supabase.functions.invoke('generate-trip-plan', {
         body: {
@@ -182,6 +190,18 @@ export const useTripFormSubmit = (resetForm: () => void) => {
         // Ensure all monetary values use the ₹ symbol and not $
         sanitizeCurrencyValues(data.tripPlan.ai_response);
         
+        // Verify that the generated trip stays within budget
+        const budgetBreakdown = data.tripPlan.ai_response.budgetBreakdown;
+        if (budgetBreakdown && budgetBreakdown.total) {
+          const totalCost = parseCurrencyToNumber(budgetBreakdown.total);
+          
+          // If total cost exceeds budget by more than 10%, adjust the plan
+          if (totalCost > budgetValue * 1.1) {
+            console.warn(`Trip plan exceeds budget: ${totalCost} > ${budgetValue}`);
+            adjustPlanToFitBudget(data.tripPlan.ai_response, budgetValue);
+          }
+        }
+        
         setGeneratedTripPlan(data.tripPlan);
       }
       
@@ -193,6 +213,99 @@ export const useTripFormSubmit = (resetForm: () => void) => {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  // Function to parse currency string to number
+  const parseCurrencyToNumber = (currencyStr: string): number => {
+    if (!currencyStr) return 0;
+    // Remove all non-numeric characters except decimal point
+    const numericString = currencyStr.toString().replace(/[^\d.]/g, '');
+    return parseFloat(numericString) || 0;
+  };
+  
+  // Function to adjust plan to fit within budget
+  const adjustPlanToFitBudget = (aiResponse: any, budget: number) => {
+    if (!aiResponse || !aiResponse.budgetBreakdown) return;
+    
+    const scaleFactor = budget / parseCurrencyToNumber(aiResponse.budgetBreakdown.total);
+    
+    // Adjust budget breakdown
+    Object.keys(aiResponse.budgetBreakdown).forEach(key => {
+      if (key !== 'total' && typeof aiResponse.budgetBreakdown[key] === 'string') {
+        const value = parseCurrencyToNumber(aiResponse.budgetBreakdown[key]);
+        const adjustedValue = Math.round(value * scaleFactor);
+        aiResponse.budgetBreakdown[key] = `₹${adjustedValue.toLocaleString('en-IN')}`;
+      }
+    });
+    
+    // Recalculate total
+    let newTotal = 0;
+    Object.keys(aiResponse.budgetBreakdown).forEach(key => {
+      if (key !== 'total') {
+        newTotal += parseCurrencyToNumber(aiResponse.budgetBreakdown[key]);
+      }
+    });
+    aiResponse.budgetBreakdown.total = `₹${newTotal.toLocaleString('en-IN')}`;
+    
+    // Adjust accommodations
+    if (Array.isArray(aiResponse.accommodations)) {
+      aiResponse.accommodations.forEach((accommodation: any) => {
+        if (accommodation.pricePerNight) {
+          const price = parseCurrencyToNumber(accommodation.pricePerNight);
+          accommodation.pricePerNight = `₹${Math.round(price * scaleFactor).toLocaleString('en-IN')}`;
+        }
+        if (accommodation.totalCost) {
+          const cost = parseCurrencyToNumber(accommodation.totalCost);
+          accommodation.totalCost = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+        }
+      });
+    }
+    
+    // Adjust flights
+    if (Array.isArray(aiResponse.flights)) {
+      aiResponse.flights.forEach((flight: any) => {
+        if (flight.price) {
+          const price = parseCurrencyToNumber(flight.price);
+          flight.price = `₹${Math.round(price * scaleFactor).toLocaleString('en-IN')}`;
+        }
+      });
+    }
+    
+    // Adjust activities and attractions
+    ['activities', 'attractions'].forEach(category => {
+      if (Array.isArray(aiResponse[category])) {
+        aiResponse[category].forEach((item: any) => {
+          if (item.cost || item.estimatedCost) {
+            const costField = item.cost ? 'cost' : 'estimatedCost';
+            const cost = parseCurrencyToNumber(item[costField]);
+            item[costField] = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+          }
+        });
+      }
+    });
+    
+    // Adjust transportation
+    if (Array.isArray(aiResponse.transportation)) {
+      aiResponse.transportation.forEach((transport: any) => {
+        if (transport.cost) {
+          const cost = parseCurrencyToNumber(transport.cost);
+          transport.cost = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+        }
+        if (transport.costPerDay) {
+          const cost = parseCurrencyToNumber(transport.costPerDay);
+          transport.costPerDay = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+        }
+        if (transport.totalCost) {
+          const cost = parseCurrencyToNumber(transport.totalCost);
+          transport.totalCost = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+        }
+      });
+    }
+    
+    // Update summary to mention budget adjustment
+    if (aiResponse.summary) {
+      aiResponse.summary = `${aiResponse.summary}\n\nNote: This plan has been optimized to fit within your budget of ₹${budget.toLocaleString('en-IN')}.`;
     }
   };
   

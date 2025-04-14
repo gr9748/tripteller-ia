@@ -47,6 +47,14 @@ serve(async (req) => {
       );
     }
 
+    // Validate budget specifically
+    if (budget <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Budget must be greater than 0" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log("Generating trip plan with inputs:", {
       source, destination, startDate, endDate, budget, travelers, interests
     });
@@ -59,7 +67,7 @@ serve(async (req) => {
       );
     }
 
-    // Build the prompt
+    // Build the prompt with emphasis on budget constraint
     const prompt = buildTripPlanPrompt({
       source,
       destination,
@@ -103,6 +111,17 @@ serve(async (req) => {
       if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
         const responseText = data.candidates[0].content.parts[0].text;
         aiResponse = parseAIResponse(responseText, data);
+        
+        // Validate budget compliance
+        if (aiResponse.budgetBreakdown && aiResponse.budgetBreakdown.total) {
+          const totalCost = parseCurrencyToNumber(aiResponse.budgetBreakdown.total);
+          console.log(`Budget check: Generated plan total cost: ${totalCost}, User budget: ${budget}`);
+          
+          if (totalCost > budget * 1.1) { // Allow 10% flexibility
+            console.log("Budget exceeded, adjusting plan to fit budget");
+            adjustPlanToFitBudget(aiResponse, budget);
+          }
+        }
       } else {
         console.error("Unexpected API response structure:", data);
         aiResponse = { error: "Failed to parse API response" };
@@ -149,3 +168,59 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function to parse currency string to number
+function parseCurrencyToNumber(currencyStr: string): number {
+  if (!currencyStr) return 0;
+  // Remove all non-numeric characters except decimal point
+  const numericString = currencyStr.toString().replace(/[^\d.]/g, '');
+  return parseFloat(numericString) || 0;
+}
+
+// Function to adjust plan to fit within budget
+function adjustPlanToFitBudget(aiResponse: any, budget: number) {
+  if (!aiResponse || !aiResponse.budgetBreakdown) return;
+  
+  const totalCost = parseCurrencyToNumber(aiResponse.budgetBreakdown.total);
+  const scaleFactor = budget / totalCost;
+  
+  console.log(`Adjusting plan with scale factor: ${scaleFactor}`);
+  
+  // Adjust budget breakdown
+  Object.keys(aiResponse.budgetBreakdown).forEach(key => {
+    if (key !== 'total' && typeof aiResponse.budgetBreakdown[key] === 'string') {
+      const value = parseCurrencyToNumber(aiResponse.budgetBreakdown[key]);
+      const adjustedValue = Math.round(value * scaleFactor);
+      aiResponse.budgetBreakdown[key] = `₹${adjustedValue.toLocaleString('en-IN')}`;
+    }
+  });
+  
+  // Recalculate total
+  aiResponse.budgetBreakdown.total = `₹${budget.toLocaleString('en-IN')}`;
+  
+  // Adjust other cost items
+  adjustCostsInCategory(aiResponse, 'accommodations', ['pricePerNight', 'totalCost'], scaleFactor);
+  adjustCostsInCategory(aiResponse, 'flights', ['price'], scaleFactor);
+  adjustCostsInCategory(aiResponse, 'attractions', ['estimatedCost'], scaleFactor);
+  adjustCostsInCategory(aiResponse, 'activities', ['cost'], scaleFactor);
+  adjustCostsInCategory(aiResponse, 'transportation', ['cost', 'costPerDay', 'totalCost'], scaleFactor);
+  
+  // Update summary to mention budget adjustment
+  if (aiResponse.summary) {
+    aiResponse.summary = `${aiResponse.summary}\n\nNote: This plan has been optimized to fit within your budget of ₹${budget.toLocaleString('en-IN')}.`;
+  }
+}
+
+// Helper function to adjust costs in a specific category
+function adjustCostsInCategory(aiResponse: any, category: string, costFields: string[], scaleFactor: number) {
+  if (Array.isArray(aiResponse[category])) {
+    aiResponse[category].forEach((item: any) => {
+      costFields.forEach(field => {
+        if (item[field]) {
+          const cost = parseCurrencyToNumber(item[field]);
+          item[field] = `₹${Math.round(cost * scaleFactor).toLocaleString('en-IN')}`;
+        }
+      });
+    });
+  }
+}

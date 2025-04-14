@@ -28,6 +28,15 @@ export const TripFormDetails: React.FC<TripFormDetailsProps> = ({
   interests,
   handleChange
 }) => {
+  // Function to handle budget input validation
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow non-negative numbers
+    if (value === '' || (Number(value) >= 0)) {
+      handleChange(e);
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -42,10 +51,12 @@ export const TripFormDetails: React.FC<TripFormDetailsProps> = ({
             type="number"
             min="0"
             value={budget}
-            onChange={handleChange}
+            onChange={handleBudgetChange}
             placeholder="Your total budget"
             required
+            className="focus:border-green-500"
           />
+          <p className="text-xs text-muted-foreground">Your trip plan will be optimized to fit within this budget</p>
         </motion.div>
         
         <motion.div variants={inputVariants} className="space-y-2">

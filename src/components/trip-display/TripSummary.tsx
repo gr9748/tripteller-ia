@@ -27,12 +27,12 @@ export const TripSummary: React.FC<TripSummaryProps> = ({
             {destination}
           </h3>
         </div>
-        <div className="flex gap-4 text-sm text-slate-600 dark:text-slate-300">
+        <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4 text-indigo-500" />
             {startDate} - {endDate}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
             <IndianRupee className="h-4 w-4 text-green-500" />
             Budget: {formatCurrency(budget)}
           </span>

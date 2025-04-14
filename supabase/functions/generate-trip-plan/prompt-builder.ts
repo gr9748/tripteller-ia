@@ -19,6 +19,8 @@ export function buildTripPlanPrompt(tripDetails: {
   - Number of travelers: ${travelers}
   ${interests ? `- Interests/preferences: ${interests}` : ''}
 
+  IMPORTANT: The total cost of the trip MUST NOT exceed the specified budget of ₹${budget}. This is a strict constraint.
+  
   Please provide a comprehensive travel plan that includes:
   1. Suggested flights from ${source} to ${destination} (with estimated prices in Indian Rupees)
   2. Recommended hotels or accommodations (with price ranges in Indian Rupees)
@@ -37,6 +39,8 @@ export function buildTripPlanPrompt(tripDetails: {
   7. Budget breakdown for the entire trip in Indian Rupees
   8. Travel tips specific to ${destination}
   9. Fun activities and entertainment options for travelers
+
+  BUDGET CONSTRAINT: The sum of all costs in the budget breakdown MUST be less than or equal to ₹${budget}. Make realistic choices that fit within this budget.
 
   Format your response as a JSON object with the following structure:
   {
@@ -60,7 +64,11 @@ export function buildTripPlanPrompt(tripDetails: {
     "activities": [{"name": "...", "description": "...", "cost": "..."}]
   }
 
-  IMPORTANT: Use Indian Rupees (₹) for ALL monetary values. DO NOT use dollar signs ($) or other currencies.
+  IMPORTANT: 
+  1. Use Indian Rupees (₹) for ALL monetary values. DO NOT use dollar signs ($) or other currencies.
+  2. Make sure the total in budgetBreakdown.total is LESS THAN OR EQUAL TO ₹${budget}.
+  3. All costs must be realistic and appropriate for the destination.
+  4. If necessary, adjust accommodation quality, transportation options, or activity selections to stay within budget.
   `;
 }
 
