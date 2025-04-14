@@ -1,9 +1,11 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface TripPlan {
   id: string;
@@ -14,6 +16,7 @@ interface TripPlan {
   budget: number;
   travelers: number;
   created_at: string;
+  interests?: string;
   ai_response?: any;
 }
 
@@ -23,6 +26,8 @@ interface PlanDialogProps {
 }
 
 const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
+  const navigate = useNavigate();
+  
   if (!plan) return null;
 
   const handleNavigate = () => {
@@ -31,8 +36,20 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
   };
 
   const handleUsePlan = () => {
-    // Here we'll just close the dialog as the plan is already selected
-    // In a real implementation, you might want to navigate to the trip planner with this plan pre-filled
+    // Store the selected plan in sessionStorage for the home page to use
+    sessionStorage.setItem('reuseTripPlan', JSON.stringify({
+      source: plan.source,
+      destination: plan.destination,
+      startDate: plan.start_date,
+      endDate: plan.end_date,
+      budget: plan.budget.toString(),
+      travelers: plan.travelers.toString(),
+      interests: plan.interests || ''
+    }));
+    
+    // Navigate to home page and signal to reload form with this data
+    navigate('/');
+    toast.success('Plan loaded! Ready to customize your trip.');
     onClose();
   };
 
@@ -85,7 +102,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
                         )}
                         {flight.price && (
                           <div className="text-green-600 dark:text-green-400 mt-1">
-                            Price: {formatCurrency(parseFloat(flight.price.replace(/[^\d.]/g, '')))}
+                            Price: {formatCurrency(parseFloat(flight.price.toString().replace(/[^\d.]/g, '')))}
                           </div>
                         )}
                       </div>

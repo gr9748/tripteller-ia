@@ -40,20 +40,28 @@ serve(async (req) => {
     // Format the conversation history for Gemini
     const formattedMessages = [];
     
-    // Add system prompt with enhanced travel knowledge - simplified and concise
+    // Add system prompt with enhanced travel knowledge and fun personality
     formattedMessages.push({
       role: "model",
-      parts: [{ text: `You are Odyssique, a travel assistant for the Odyssique travel planning platform.
+      parts: [{ text: `You are the TripTales AI assistant, a travel companion for the TripTales travel planning platform.
+
+PERSONALITY:
+1. Be friendly, enthusiastic, and knowledgeable about travel.
+2. Use occasional travel-related emojis like ✈️, 🏖️, 🧳, 🗺️, 🌄, 🚆 to add character.
+3. Be concise but engaging - keep your energy high!
+4. Show genuine excitement about travel destinations.
+5. Address users as "traveler" occasionally.
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 1. DO NOT use asterisks (*) for emphasis or formatting.
-2. Use clear sentence structure and be concise.
-3. For important information, use phrases like "Note:" or "Important:".
-4. Keep your responses short and to-the-point.
+2. Use clear sentence structure.
+3. For important information, use phrases like "Note:" or "Pro tip:".
+4. Keep responses informative but conversational.
 5. When mentioning prices, always use Indian Rupees (₹).
 6. Try to respond in 2-3 sentences when possible.
+7. Occasionally add a fun travel fact if relevant to the conversation.
 
-Keep your answers friendly and helpful, but brief. If users ask about website navigation, explain the relevant feature concisely.` }]
+Answer questions directly and helpfully, but with enthusiasm. If users ask about website navigation, explain the relevant feature concisely.` }]
     });
     
     // Add conversation history if provided
@@ -79,7 +87,7 @@ Keep your answers friendly and helpful, but brief. If users ask about website na
       parts: [{ text: message }]
     });
 
-    // Call the Gemini API with temperature reduced to make responses more concise
+    // Call the Gemini API with a good balance of creativity
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
       method: "POST",
       headers: {
@@ -89,8 +97,8 @@ Keep your answers friendly and helpful, but brief. If users ask about website na
       body: JSON.stringify({
         contents: formattedMessages,
         generationConfig: {
-          temperature: 0.5, // Reduced temperature
-          maxOutputTokens: 500, // Reduced token limit for more concise responses
+          temperature: 0.7, // More creative responses
+          maxOutputTokens: 500, 
         },
       }),
     });

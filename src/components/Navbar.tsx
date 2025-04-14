@@ -1,112 +1,192 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, Globe, PlaneTakeoff, Heart, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/lib/utils';
+import { useMobileCheck } from '@/hooks/use-mobile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const Navbar: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const location = useLocation();
-  const [scrolled, setScrolled] = useState(false);
+const Navbar = () => {
+  const { isAuthenticated, user, logout } = useAuth();
+  const isMobile = useMobileCheck();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
+  const getInitials = (name?: string | null) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(prev => !prev);
+  };
 
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 transition-all duration-300',
-        scrolled ? 'glass' : 'bg-transparent'
-      )}
-    >
-      <div className="container mx-auto flex items-center justify-between">
+    <nav className="py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+      <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ rotate: -10 }}
+            animate={{ rotate: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center"
           >
-            <span className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-700">
-              TravelAI
-            </span>
+            <PlaneTakeoff className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
           </motion.div>
+          <div className="flex flex-col">
+            <span className="font-bold text-xl text-slate-900 dark:text-white bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              TripTales
+            </span>
+            <span className="text-xs text-slate-600 dark:text-slate-400">
+              Your journey, your story
+            </span>
+          </div>
         </Link>
-        
-        <div className="flex items-center space-x-4">
+
+        {!isMobile && (
+          <div className="flex items-center space-x-6">
+            <Link
+              to="/"
+              className="flex items-center text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <Globe className="h-4 w-4 mr-1.5" />
+              <span>Explore</span>
+            </Link>
+            <Link
+              to="/faq"
+              className="flex items-center text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <MapPin className="h-4 w-4 mr-1.5" />
+              <span>Destinations</span>
+            </Link>
+            <Link
+              to="/faq"
+              className="flex items-center text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <Heart className="h-4 w-4 mr-1.5" />
+              <span>Travel Tips</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Authentication buttons */}
+        <div className="flex items-center space-x-3">
           {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user?.email}`} alt={user?.name} />
-                    <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-1 glass">
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    {user?.name && <p className="font-medium">{user.name}</p>}
-                    {user?.email && (
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    )}
-                  </div>
-                </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Profile Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => logout()}
-                  className="text-destructive focus:text-destructive cursor-pointer"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <Button
+                onClick={() => navigate('/profile')}
+                variant="ghost"
+                className="p-0 h-10 w-10 rounded-full"
+              >
+                <Avatar className="h-9 w-9 ring-2 ring-offset-2 ring-indigo-500 dark:ring-indigo-400">
+                  <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+                  <AvatarFallback className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                    {getInitials(user?.user_metadata?.full_name || user?.email)}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </>
           ) : (
-            <div className="flex items-center space-x-2">
-              {location.pathname !== '/login' && (
-                <Button asChild variant="ghost">
-                  <Link to="/login">Login</Link>
+            <>
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/login')}
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400"
+                >
+                  Login
                 </Button>
               )}
-              {location.pathname !== '/signup' && (
-                <Button asChild>
-                  <Link to="/signup">Sign up</Link>
-                </Button>
-              )}
-            </div>
+              <Button
+                onClick={() => navigate('/signup')}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+              >
+                Get Started
+              </Button>
+            </>
+          )}
+
+          {isMobile && (
+            <Button
+              onClick={toggleMenu}
+              variant="ghost"
+              className="p-2"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X /> : <Menu />}
+            </Button>
           )}
         </div>
       </div>
-    </motion.header>
+
+      {/* Mobile menu */}
+      {isMobile && menuOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="container mx-auto mt-2 pb-4 space-y-3"
+        >
+          <Link
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            className="block p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+          >
+            Home
+          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="block p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+              >
+                Profile
+              </Link>
+              <Button
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                variant="ghost"
+                className="w-full justify-start p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="block p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                onClick={() => setMenuOpen(false)}
+                className="block p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </motion.div>
+      )}
+    </nav>
   );
 };
 
