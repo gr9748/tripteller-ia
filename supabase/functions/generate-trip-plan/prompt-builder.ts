@@ -69,22 +69,44 @@ export function buildTripPlanPrompt(tripDetails: {
   2. Make sure the total in budgetBreakdown.total is LESS THAN OR EQUAL TO ₹${budget}.
   3. All costs must be realistic and appropriate for the destination.
   4. If necessary, adjust accommodation quality, transportation options, or activity selections to stay within budget.
+
+  Return ONLY the JSON with no additional text before or after.
   `;
 }
 
 export function parseAIResponse(responseText: string, rawResponse: any) {
   try {
-    // Try to extract JSON from the response text
-    const startJson = responseText.indexOf("{");
-    const endJson = responseText.lastIndexOf("}") + 1;
+    // First, try to extract JSON wrapped in code blocks
+    const jsonBlockRegex = /```(?:json)?\n([\s\S]*?)\n```/;
+    const jsonBlockMatch = responseText.match(jsonBlockRegex);
     
-    if (startJson >= 0 && endJson > startJson) {
-      const jsonStr = responseText.substring(startJson, endJson);
+    if (jsonBlockMatch && jsonBlockMatch[1]) {
+      const jsonStr = jsonBlockMatch[1];
       return JSON.parse(jsonStr);
-    } else {
-      // Fallback if JSON parsing fails
-      return { summary: responseText };
     }
+    
+    // If no code blocks, try to find JSON object directly
+    const jsonStart = responseText.indexOf("{");
+    const jsonEnd = responseText.lastIndexOf("}") + 1;
+    
+    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+      const jsonStr = responseText.substring(jsonStart, jsonEnd);
+      
+      // Fix common JSON syntax issues
+      const fixedJsonStr = jsonStr
+        .replace(/([{,])\s*(\w+):/g, '$1"$2":') // Add quotes to keys without them
+        .replace(/:\s*'([^']*)'/g, ':"$1"') // Replace single quotes with double quotes
+        .replace(/,\s*}/g, '}') // Remove trailing commas
+        .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+        
+      return JSON.parse(fixedJsonStr);
+    }
+    
+    // Fallback if all else fails
+    return { 
+      summary: responseText.substring(0, 200) + "...",
+      error: "Could not parse proper JSON structure"
+    };
   } catch (error) {
     console.error("Error parsing AI response:", error);
     return { 

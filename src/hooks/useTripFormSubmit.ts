@@ -149,42 +149,69 @@ export const useTripFormSubmit = (resetForm: () => void) => {
         }
         
         toast.error('Failed to generate trip plan');
+        setIsSubmitting(false);
         return;
       }
       
-      toast.success('Trip plan generated successfully!');
       console.log('Trip plan generated:', data);
       
       // Store the generated trip plan
       if (data?.tripPlan) {
-        // Check if the AI response has an error or is missing data
-        if (data.tripPlan.ai_response?.error || !data.tripPlan.ai_response?.itinerary) {
-          console.warn('AI response has errors or missing data:', data.tripPlan.ai_response);
+        // Improved AI response parsing logic
+        try {
+          let parsedResponse = null;
           
-          // If there's raw response data in a JSON string, try to parse it
+          // Check if the AI response has an error or if there's raw response data
           if (data.tripPlan.ai_response?.rawResponse?.candidates?.[0]?.content?.parts?.[0]?.text) {
-            try {
-              const responseText = data.tripPlan.ai_response.rawResponse.candidates[0].content.parts[0].text;
-              const jsonStart = responseText.indexOf('{');
-              const jsonEnd = responseText.lastIndexOf('}') + 1;
+            // Get the text content from the Gemini API response
+            const responseText = data.tripPlan.ai_response.rawResponse.candidates[0].content.parts[0].text;
+            
+            // Look for JSON content in the text (usually contained within ```json and ```)
+            const jsonMatches = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                               responseText.match(/```\n([\s\S]*?)\n```/) ||
+                               responseText.match(/{[\s\S]*?}/);
+            
+            if (jsonMatches && jsonMatches[0]) {
+              let jsonStr = jsonMatches[0];
+              
+              // Clean up the markdown code block syntax if present
+              jsonStr = jsonStr.replace(/```json\n|```\n|```/g, '');
+              
+              // Remove non-JSON content that might be around the JSON object
+              const jsonStart = jsonStr.indexOf('{');
+              const jsonEnd = jsonStr.lastIndexOf('}') + 1;
               
               if (jsonStart >= 0 && jsonEnd > jsonStart) {
-                const jsonStr = responseText.substring(jsonStart, jsonEnd);
-                const parsedResponse = JSON.parse(jsonStr);
+                jsonStr = jsonStr.substring(jsonStart, jsonEnd);
                 
-                // Update the AI response with the parsed data
-                data.tripPlan.ai_response = parsedResponse;
-                console.log('Successfully parsed AI response from raw text:', parsedResponse);
+                // Fix any common JSON syntax errors
+                jsonStr = jsonStr.replace(/([{,])\s*(\w+):/g, '$1"$2":'); // Add quotes to keys without them
+                jsonStr = jsonStr.replace(/:\s*'([^']*)'/g, ':"$1"'); // Replace single quotes with double quotes
+                jsonStr = jsonStr.replace(/,\s*}/g, '}'); // Remove trailing commas
+                jsonStr = jsonStr.replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+                
+                // Parse the JSON string to an object
+                parsedResponse = JSON.parse(jsonStr);
+                console.log('Successfully parsed AI response from raw text');
               }
-            } catch (parseError) {
-              console.error('Failed to parse AI response from raw text:', parseError);
-              // Use a default response format as fallback
-              data.tripPlan.ai_response = defaultAiResponse;
             }
+          } else if (data.tripPlan.ai_response && !data.tripPlan.ai_response.error) {
+            // If the response is already parsed correctly
+            parsedResponse = data.tripPlan.ai_response;
+          }
+          
+          // If we successfully parsed the response, update the trip plan
+          if (parsedResponse) {
+            data.tripPlan.ai_response = parsedResponse;
           } else {
-            // If we can't parse or there's no raw text, use the default response
+            console.warn('Could not parse AI response, using default response');
             data.tripPlan.ai_response = defaultAiResponse;
           }
+          
+        } catch (parseError) {
+          console.error('Failed to parse AI response:', parseError);
+          // Use a default response format as fallback
+          data.tripPlan.ai_response = defaultAiResponse;
         }
         
         // Ensure all monetary values use the ₹ symbol and not $
@@ -202,7 +229,10 @@ export const useTripFormSubmit = (resetForm: () => void) => {
           }
         }
         
+        toast.success('Trip plan generated successfully!');
         setGeneratedTripPlan(data.tripPlan);
+      } else {
+        toast.error('Failed to generate trip plan data');
       }
       
       // Reset form

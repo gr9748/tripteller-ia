@@ -19,3 +19,6 @@ export const useMobileCheck = () => {
 
   return isMobile;
 };
+
+// Add aliased export for backward compatibility
+export const useIsMobile = useMobileCheck;

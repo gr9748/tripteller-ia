@@ -29,24 +29,8 @@ const TripPlanForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidForm()) return;
-    
     await submitTripPlan(formData);
   };
-
-  // Check for reused plan data when component mounts
-  useEffect(() => {
-    const reusePlanData = sessionStorage.getItem('reuseTripPlan');
-    if (reusePlanData) {
-      try {
-        const planData = JSON.parse(reusePlanData);
-        setFormData(planData);
-        // Clear the session storage to avoid reloading on subsequent visits
-        sessionStorage.removeItem('reuseTripPlan');
-      } catch (err) {
-        console.error('Error parsing reused plan data:', err);
-      }
-    }
-  }, [setFormData]);
 
   if (generatedTripPlan) {
     return null; // Hide form when plan is generated

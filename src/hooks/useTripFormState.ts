@@ -33,10 +33,10 @@ export const useTripFormState = () => {
         setFormData({
           source: planData.source || '',
           destination: planData.destination || '',
-          startDate: planData.startDate || '',
-          endDate: planData.endDate || '',
-          budget: planData.budget || '',
-          travelers: planData.travelers || '1',
+          startDate: planData.start_date || '',
+          endDate: planData.end_date || '',
+          budget: planData.budget ? planData.budget.toString() : '',
+          travelers: planData.travelers ? planData.travelers.toString() : '1',
           interests: planData.interests || ''
         });
         
@@ -46,6 +46,7 @@ export const useTripFormState = () => {
       }
     } catch (error) {
       console.error('Error loading saved trip plan:', error);
+      toast.error('Error loading saved trip plan');
     }
   }, []);
 
