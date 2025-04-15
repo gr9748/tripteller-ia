@@ -33,11 +33,11 @@ const Navbar = () => {
     setMenuOpen(prev => !prev);
   };
 
-  // Get user metadata safely
-  const userMetadata = user?.user_metadata || {};
-  const userFullName = userMetadata.full_name || '';
-  const userAvatarUrl = userMetadata.avatar_url || '';
+  // Use properties that actually exist on our User type
+  const userFullName = user?.name || '';
   const userEmail = user?.email || '';
+  // No avatar URL in our User model, use Gravatar-like service instead
+  const userAvatarUrl = user?.email ? `https://avatar.vercel.sh/${user.email}` : '';
 
   return (
     <nav className="py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
