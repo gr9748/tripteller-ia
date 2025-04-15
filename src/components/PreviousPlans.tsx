@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,16 +28,21 @@ interface PreviousPlansProps {
   onRefresh: () => void;
 }
 
-const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefresh }) => {
+const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans: initialPlans, isLoading, onRefresh }) => {
   const [selectedPlan, setSelectedPlan] = useState<TripPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [plans, setPlans] = useState<TripPlan[]>(initialPlans);
   const navigate = useNavigate();
+  
+  // Update local plans when props change
+  useEffect(() => {
+    setPlans(initialPlans);
+  }, [initialPlans]);
   
   const handleDelete = async (id: string) => {
     try {
       setIsDeleting(id);
       
-      // Make sure we're using the ID properly in the delete query
       const { error } = await supabase
         .from('trip_plans')
         .delete()
@@ -55,7 +60,10 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
         setSelectedPlan(null);
       }
       
-      // Refresh the list after deletion
+      // Update local state to remove the deleted plan
+      setPlans(prevPlans => prevPlans.filter(plan => plan.id !== id));
+      
+      // Also refresh from the server to ensure consistency
       onRefresh();
     } catch (error) {
       console.error('Error deleting plan:', error);
@@ -78,8 +86,8 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
       sessionStorage.setItem('reuseTripPlan', JSON.stringify({
         source: plan.source,
         destination: plan.destination,
-        startDate: plan.start_date,  // Use the original database field names
-        endDate: plan.end_date,      // Use the original database field names
+        startDate: plan.start_date,
+        endDate: plan.end_date,
         budget: plan.budget.toString(),
         travelers: plan.travelers.toString(),
         interests: plan.interests || ''
