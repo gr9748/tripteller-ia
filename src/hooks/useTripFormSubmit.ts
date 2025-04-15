@@ -148,7 +148,7 @@ export const useTripFormSubmit = (resetForm: () => void) => {
           return;
         }
         
-        toast.error('Failed to generate trip plan');
+        toast.error('Failed to generate trip plan: ' + (error.message || 'Unknown error'));
         setIsSubmitting(false);
         return;
       }
@@ -185,14 +185,32 @@ export const useTripFormSubmit = (resetForm: () => void) => {
                 jsonStr = jsonStr.substring(jsonStart, jsonEnd);
                 
                 // Fix any common JSON syntax errors
-                jsonStr = jsonStr.replace(/([{,])\s*(\w+):/g, '$1"$2":'); // Add quotes to keys without them
-                jsonStr = jsonStr.replace(/:\s*'([^']*)'/g, ':"$1"'); // Replace single quotes with double quotes
-                jsonStr = jsonStr.replace(/,\s*}/g, '}'); // Remove trailing commas
-                jsonStr = jsonStr.replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+                jsonStr = jsonStr
+                  .replace(/([{,])\s*(\w+):/g, '$1"$2":') // Add quotes to keys without them
+                  .replace(/:\s*'([^']*)'/g, ':"$1"') // Replace single quotes with double quotes
+                  .replace(/,\s*}/g, '}') // Remove trailing commas
+                  .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
                 
-                // Parse the JSON string to an object
-                parsedResponse = JSON.parse(jsonStr);
-                console.log('Successfully parsed AI response from raw text');
+                try {
+                  // Parse the JSON string to an object
+                  parsedResponse = JSON.parse(jsonStr);
+                  console.log('Successfully parsed AI response from raw text');
+                } catch (parseError) {
+                  console.error('Failed to parse JSON despite cleanup:', parseError);
+                  // If parsing fails, try to sanitize further by removing invalid characters
+                  jsonStr = jsonStr
+                    .replace(/\n/g, ' ')
+                    .replace(/\r/g, '')
+                    .replace(/\t/g, ' ')
+                    .replace(/\\(?!["\\/bfnrt])/g, '\\\\'); // Escape unescaped backslashes
+                  
+                  try {
+                    parsedResponse = JSON.parse(jsonStr);
+                    console.log('Successfully parsed AI response after additional sanitization');
+                  } catch (finalError) {
+                    console.error('Final parsing attempt failed:', finalError);
+                  }
+                }
               }
             }
           } else if (data.tripPlan.ai_response && !data.tripPlan.ai_response.error) {
@@ -231,6 +249,9 @@ export const useTripFormSubmit = (resetForm: () => void) => {
         
         toast.success('Trip plan generated successfully!');
         setGeneratedTripPlan(data.tripPlan);
+        
+        // Navigate to display the plan
+        navigate(`/trip-plan/${data.tripPlan.id}`);
       } else {
         toast.error('Failed to generate trip plan data');
       }

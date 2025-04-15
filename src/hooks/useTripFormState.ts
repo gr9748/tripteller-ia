@@ -33,8 +33,8 @@ export const useTripFormState = () => {
         setFormData({
           source: planData.source || '',
           destination: planData.destination || '',
-          startDate: planData.start_date || '',
-          endDate: planData.end_date || '',
+          startDate: planData.startDate || '',
+          endDate: planData.endDate || '',
           budget: planData.budget ? planData.budget.toString() : '',
           travelers: planData.travelers ? planData.travelers.toString() : '1',
           interests: planData.interests || ''

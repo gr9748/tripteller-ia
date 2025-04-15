@@ -18,6 +18,7 @@ interface TripPlan {
   travelers: number;
   created_at: string;
   ai_response?: any;
+  interests?: string;
 }
 
 interface PreviousPlansProps {
@@ -36,7 +37,7 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
       const { error } = await supabase
         .from('trip_plans')
         .delete()
-        .match({ id });
+        .eq('id', id);
       
       if (error) {
         throw error;
