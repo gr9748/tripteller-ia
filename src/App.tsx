@@ -17,6 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import TripPlanDetails from "./pages/TripPlanDetails";
 import Faq from "./pages/Faq";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/faq" element={<Faq />} />
+              <Route path="/trip-plan/:id" element={<TripPlanDetails />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>

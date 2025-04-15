@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import PlanCard from './plans/PlanCard';
 import PlanDialog from './plans/PlanDialog';
 import EmptyPlans from './plans/EmptyPlans';
+import { useNavigate } from 'react-router-dom';
 
 interface TripPlan {
   id: string;
@@ -30,6 +31,7 @@ interface PreviousPlansProps {
 const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefresh }) => {
   const [selectedPlan, setSelectedPlan] = useState<TripPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const handleDelete = async (id: string) => {
     try {
@@ -57,6 +59,35 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
     const plan = plans.find(p => p.id === id);
     if (plan) {
       setSelectedPlan(plan);
+    }
+  };
+
+  const handleReusePlan = (plan: TripPlan) => {
+    try {
+      // Store plan data in sessionStorage for the form to use
+      sessionStorage.setItem('reuseTripPlan', JSON.stringify({
+        source: plan.source,
+        destination: plan.destination,
+        startDate: plan.start_date,  // Use the original database field names
+        endDate: plan.end_date,      // Use the original database field names
+        budget: plan.budget,
+        travelers: plan.travelers,
+        interests: plan.interests || ''
+      }));
+      
+      toast.success('Plan loaded for reuse. Redirecting to planner...');
+      
+      // Close the dialog if it's open
+      setSelectedPlan(null);
+      
+      // Navigate to the home page with trip planner
+      navigate('/');
+      
+      // Force a reload to ensure the form picks up the new data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error reusing plan:', error);
+      toast.error('Failed to load plan for reuse');
     }
   };
 
@@ -98,7 +129,11 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
         ))}
       </div>
       
-      <PlanDialog plan={selectedPlan} onClose={() => setSelectedPlan(null)} />
+      <PlanDialog 
+        plan={selectedPlan} 
+        onClose={() => setSelectedPlan(null)} 
+        onReuse={selectedPlan ? () => handleReusePlan(selectedPlan) : undefined}
+      />
     </div>
   );
 };
