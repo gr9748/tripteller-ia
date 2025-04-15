@@ -23,9 +23,10 @@ interface TripPlan {
 interface PlanDialogProps {
   plan: TripPlan | null;
   onClose: () => void;
+  onReuse?: () => void;
 }
 
-const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
+const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose, onReuse }) => {
   const navigate = useNavigate();
   
   if (!plan) return null;
@@ -36,29 +37,33 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose }) => {
   };
 
   const handleUsePlan = () => {
-    try {
-      // Store the selected plan in sessionStorage for the home page to use
-      sessionStorage.setItem('reuseTripPlan', JSON.stringify({
-        source: plan.source,
-        destination: plan.destination,
-        startDate: plan.start_date,
-        endDate: plan.end_date,
-        budget: plan.budget.toString(),
-        travelers: plan.travelers.toString(),
-        interests: plan.interests || ''
-      }));
-      
-      // Navigate to home page
-      onClose(); // Close dialog first
-      navigate('/'); // Then navigate
-      
-      // Show success toast with slight delay to ensure it appears after navigation
-      setTimeout(() => {
-        toast.success('Plan loaded! Ready to customize your trip.');
-      }, 100);
-    } catch (error) {
-      console.error('Error using plan again:', error);
-      toast.error('Failed to load plan. Please try again.');
+    if (onReuse) {
+      onReuse();
+    } else {
+      try {
+        // Store the selected plan in sessionStorage for the home page to use
+        sessionStorage.setItem('reuseTripPlan', JSON.stringify({
+          source: plan.source,
+          destination: plan.destination,
+          startDate: plan.start_date,
+          endDate: plan.end_date,
+          budget: plan.budget.toString(),
+          travelers: plan.travelers.toString(),
+          interests: plan.interests || ''
+        }));
+        
+        // Navigate to home page
+        onClose(); // Close dialog first
+        navigate('/'); // Then navigate
+        
+        // Show success toast with slight delay to ensure it appears after navigation
+        setTimeout(() => {
+          toast.success('Plan loaded! Ready to customize your trip.');
+        }, 100);
+      } catch (error) {
+        console.error('Error using plan again:', error);
+        toast.error('Failed to load plan. Please try again.');
+      }
     }
   };
 
