@@ -55,7 +55,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 border rounded-lg bg-gradient-to-br from-slate-50 to-blue-50 backdrop-blur-sm shadow-sm dark:from-slate-900 dark:to-blue-900/30"
+      className="p-4 w-full max-w-5xl mx-auto border rounded-lg bg-gradient-to-br from-slate-50 to-blue-50 backdrop-blur-sm shadow-sm dark:from-slate-900 dark:to-blue-900/30"
     >
       <div className="absolute -z-10 w-[300px] h-[300px] bg-gradient-to-br from-purple-500/20 to-indigo-500/10 rounded-full blur-3xl top-12 -right-32 opacity-40"></div>
       <div className="absolute -z-10 w-[250px] h-[250px] bg-gradient-to-tr from-blue-500/20 to-sky-400/10 rounded-full blur-3xl bottom-32 -left-24 opacity-30"></div>
@@ -75,7 +75,7 @@ const TripPlanDisplay: React.FC<TripPlanDisplayProps> = ({ tripPlan, onBack }) =
 
       <LiveLocationButton destination={tripPlan.destination} />
       
-      <ScrollArea className="h-[calc(100vh-520px)] pr-4 -mr-4 mt-4">
+      <ScrollArea className="h-[calc(100vh-480px)] pr-4 -mr-4 mt-4">
         <AccordionSections 
           transportationArray={transportationArray}
           activitiesArray={activitiesArray}

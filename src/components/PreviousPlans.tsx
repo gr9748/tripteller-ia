@@ -36,17 +36,27 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
   const handleDelete = async (id: string) => {
     try {
       setIsDeleting(id);
+      
+      // Make sure we're using the ID properly in the delete query
       const { error } = await supabase
         .from('trip_plans')
         .delete()
         .eq('id', id);
       
       if (error) {
+        console.error('Supabase delete error:', error);
         throw error;
       }
       
       toast.success('Trip plan deleted successfully');
-      onRefresh(); // Refresh the list after deletion
+      
+      // If the deleted plan was selected, clear the selection
+      if (selectedPlan && selectedPlan.id === id) {
+        setSelectedPlan(null);
+      }
+      
+      // Refresh the list after deletion
+      onRefresh();
     } catch (error) {
       console.error('Error deleting plan:', error);
       toast.error('Failed to delete trip plan');
@@ -70,8 +80,8 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
         destination: plan.destination,
         startDate: plan.start_date,  // Use the original database field names
         endDate: plan.end_date,      // Use the original database field names
-        budget: plan.budget,
-        travelers: plan.travelers,
+        budget: plan.budget.toString(),
+        travelers: plan.travelers.toString(),
         interests: plan.interests || ''
       }));
       
@@ -82,9 +92,6 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans, isLoading, onRefre
       
       // Navigate to the home page with trip planner
       navigate('/');
-      
-      // Force a reload to ensure the form picks up the new data
-      window.location.reload();
     } catch (error) {
       console.error('Error reusing plan:', error);
       toast.error('Failed to load plan for reuse');

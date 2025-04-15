@@ -69,7 +69,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({ plan, onClose, onReuse }) => {
 
   return (
     <Dialog open={!!plan} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[90vw] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-blue-700 dark:text-blue-400">
             {plan.source} to {plan.destination}
