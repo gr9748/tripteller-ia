@@ -14,12 +14,10 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState(user?.name || '');
 
-  // Update user display name when user changes
   useEffect(() => {
     setUserDisplayName(user?.name || '');
   }, [user]);
 
-  // Listen for profile updates
   useEffect(() => {
     const handleProfileUpdate = (event: CustomEvent) => {
       if (event.detail && event.detail.name) {
