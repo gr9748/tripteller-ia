@@ -42,6 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
+      } else if (event === 'USER_UPDATED' && session) {
+        // Update user data when profile is updated
+        fetchUserProfile(session.user.id);
       }
     });
 
@@ -73,6 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('user', JSON.stringify(userData));
             setUser(userData);
           }
+          
+          // Also fetch the latest profile in case it has been updated
+          if (sessionData.session.user.id) {
+            fetchUserProfile(sessionData.session.user.id);
+          }
         } else {
           // No valid session, clear user data
           localStorage.removeItem('user');
@@ -93,6 +101,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       authListener.subscription.unsubscribe();
     };
   }, []);
+  
+  // Function to fetch the latest user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+      
+      if (data) {
+        // Get the stored user data
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          
+          // Update with fresh profile data
+          const updatedUserData = {
+            ...userData,
+            name: data.name || userData.name
+          };
+          
+          // Update local storage and state
+          localStorage.setItem('user', JSON.stringify(updatedUserData));
+          setUser(updatedUserData);
+        }
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -118,6 +162,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(userData);
         toast.success('Successfully logged in');
         navigate('/');
+        
+        // Also fetch the latest profile
+        fetchUserProfile(data.user.id);
       }
     } catch (error) {
       console.error('Login process error:', error);
@@ -172,16 +219,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Logout error:', error.message);
         toast.error(error.message || 'Logout failed');
-        return;
+        throw error;
       }
       
       localStorage.removeItem('user');
       setUser(null);
       toast.success('Logged out successfully');
       navigate('/login');
+      return;
     } catch (error) {
       console.error('Logout process error:', error);
       toast.error('Logout failed');
+      throw error;
     }
   };
 

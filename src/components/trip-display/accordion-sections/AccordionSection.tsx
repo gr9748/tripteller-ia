@@ -30,14 +30,11 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
   children,
   borderClass = "border-primary/10"
 }) => {
-  // Create className for the icon gradient background
-  const iconBgClass = `bg-gradient-to-br from-${gradientFrom} to-${gradientTo} p-2 rounded-full text-white mr-3 shadow-sm`;
-
   return (
     <AccordionItem value={value} className={`border-b-2 ${borderClass} mb-3`}>
       <AccordionTrigger className="py-4 group">
         <div className="flex items-center">
-          <div className={iconBgClass}>
+          <div className={`bg-gradient-to-br from-${gradientFrom} to-${gradientTo} p-2 rounded-full text-white mr-3 shadow-sm`}>
             <Icon className="h-5 w-5" />
           </div>
           <span className={`text-lg font-medium group-hover:text-${hoverColor} dark:group-hover:text-${darkHoverColor}`}>

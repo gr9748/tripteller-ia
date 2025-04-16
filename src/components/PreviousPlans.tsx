@@ -53,8 +53,6 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans: initialPlans, isLo
         throw error;
       }
       
-      toast.success('Trip plan deleted successfully');
-      
       // If the deleted plan was selected, clear the selection
       if (selectedPlan && selectedPlan.id === id) {
         setSelectedPlan(null);
@@ -62,6 +60,9 @@ const PreviousPlans: React.FC<PreviousPlansProps> = ({ plans: initialPlans, isLo
       
       // Update local state to remove the deleted plan
       setPlans(prevPlans => prevPlans.filter(plan => plan.id !== id));
+      
+      // Show success toast
+      toast.success('Trip plan deleted successfully');
       
       // Also refresh from the server to ensure consistency
       onRefresh();

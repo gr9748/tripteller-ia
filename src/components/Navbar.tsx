@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, Globe, PlaneTakeoff, Heart, MapPin } from 'lucide-react';
@@ -7,16 +7,50 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useMobileCheck } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const isMobile = useMobileCheck();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState(user?.name || '');
+
+  // Update user display name when user changes
+  useEffect(() => {
+    setUserDisplayName(user?.name || '');
+  }, [user]);
+
+  // Subscribe to auth state changes to refresh user data
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'USER_UPDATED') {
+        // Refresh user data from local storage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            setUserDisplayName(userData.name || '');
+          } catch (error) {
+            console.error('Failed to parse user data:', error);
+          }
+        }
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      setMenuOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const getInitials = (name?: string | null) => {
@@ -34,7 +68,6 @@ const Navbar = () => {
   };
 
   // Use properties that actually exist on our User type
-  const userFullName = user?.name || '';
   const userEmail = user?.email || '';
   // No avatar URL in our User model, use Gravatar-like service instead
   const userAvatarUrl = user?.email ? `https://avatar.vercel.sh/${user.email}` : '';
@@ -99,10 +132,19 @@ const Navbar = () => {
                 <Avatar className="h-9 w-9 ring-2 ring-offset-2 ring-indigo-500 dark:ring-indigo-400">
                   <AvatarImage src={userAvatarUrl} />
                   <AvatarFallback className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                    {getInitials(userFullName || userEmail)}
+                    {getInitials(userDisplayName || userEmail)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
+              {!isMobile && (
+                <Button
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="hover:bg-red-50 border-red-200 hover:text-red-600 dark:hover:bg-red-900/30 dark:border-red-800"
+                >
+                  Logout
+                </Button>
+              )}
             </>
           ) : (
             <>
@@ -162,12 +204,9 @@ const Navbar = () => {
                 Profile
               </Link>
               <Button
-                onClick={() => {
-                  handleLogout();
-                  setMenuOpen(false);
-                }}
+                onClick={handleLogout}
                 variant="ghost"
-                className="w-full justify-start p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                className="w-full justify-start p-2 text-slate-700 dark:text-slate-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
               >
                 Logout
               </Button>
