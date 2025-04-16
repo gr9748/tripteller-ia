@@ -48,6 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // Add custom event listener for profile updates
+    const handleProfileUpdate = (event: CustomEvent) => {
+      setUser(event.detail);
+    };
+    
+    window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+
     // Then check current session
     const checkAuth = async () => {
       try {
@@ -99,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       authListener.subscription.unsubscribe();
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
     };
   }, []);
   
@@ -214,6 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -226,11 +235,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       toast.success('Logged out successfully');
       navigate('/login');
-      return;
     } catch (error) {
       console.error('Logout process error:', error);
       toast.error('Logout failed');
-      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 

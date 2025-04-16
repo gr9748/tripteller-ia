@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useMobileCheck } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -21,25 +19,18 @@ const Navbar = () => {
     setUserDisplayName(user?.name || '');
   }, [user]);
 
-  // Subscribe to auth state changes to refresh user data
+  // Listen for profile updates
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'USER_UPDATED') {
-        // Refresh user data from local storage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            setUserDisplayName(userData.name || '');
-          } catch (error) {
-            console.error('Failed to parse user data:', error);
-          }
-        }
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.name) {
+        setUserDisplayName(event.detail.name);
       }
-    });
-
+    };
+    
+    window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+    
     return () => {
-      authListener.subscription.unsubscribe();
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
     };
   }, []);
 
@@ -47,7 +38,6 @@ const Navbar = () => {
     try {
       await logout();
       setMenuOpen(false);
-      navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -67,9 +57,7 @@ const Navbar = () => {
     setMenuOpen(prev => !prev);
   };
 
-  // Use properties that actually exist on our User type
   const userEmail = user?.email || '';
-  // No avatar URL in our User model, use Gravatar-like service instead
   const userAvatarUrl = user?.email ? `https://avatar.vercel.sh/${user.email}` : '';
 
   return (
@@ -120,7 +108,6 @@ const Navbar = () => {
           </div>
         )}
 
-        {/* Authentication buttons */}
         <div className="flex items-center space-x-3">
           {isAuthenticated ? (
             <>
@@ -179,7 +166,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isMobile && menuOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}

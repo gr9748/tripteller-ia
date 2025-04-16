@@ -121,7 +121,12 @@ const Profile: React.FC = () => {
         name: data.name,
       };
       
+      // Store updated user in localStorage to make it available to the rest of the app
       localStorage.setItem('user', JSON.stringify(updatedUserData));
+      
+      // Manually trigger an auth state update to refresh the UI across components
+      const authEvent = new CustomEvent('userProfileUpdated', { detail: updatedUserData });
+      window.dispatchEvent(authEvent);
       
       toast.success('Profile updated successfully');
     } catch (error) {
