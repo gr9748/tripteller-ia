@@ -131,9 +131,9 @@ const Login: React.FC = () => {
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={isSubmitting || loading}
+                  disabled={isSubmitting}
                 >
-                  {(isSubmitting) ? (
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
