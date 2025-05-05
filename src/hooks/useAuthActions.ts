@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ export const useAuthActions = (setUser: (user: User | null) => void, setLoading:
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      console.log('Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -20,10 +20,11 @@ export const useAuthActions = (setUser: (user: User | null) => void, setLoading:
       if (error) {
         console.error('Login error:', error.message);
         toast.error(error.message || 'Login failed');
-        throw error;
+        return { success: false, error };
       }
 
       if (data.user) {
+        console.log('Login successful for user:', data.user.id);
         const userData = {
           id: data.user.id,
           email: data.user.email || '',
@@ -35,10 +36,16 @@ export const useAuthActions = (setUser: (user: User | null) => void, setLoading:
         navigate('/');
         
         fetchUserProfile(data.user.id);
+        return { success: true };
+      } else {
+        console.error('Login failed: No user data returned');
+        toast.error('Login failed: No user data returned');
+        return { success: false, error: new Error('No user data returned') };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login process error:', error);
-      throw error;
+      toast.error(error.message || 'An unexpected error occurred');
+      return { success: false, error };
     } finally {
       setLoading(false);
     }

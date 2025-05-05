@@ -14,16 +14,20 @@ import { toast } from 'sonner';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, isAuthenticated, loading, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated) {
+    // Log authentication state for debugging
+    console.log('Auth state:', { isAuthenticated, loading, user });
+    
+    // Redirect if already logged in
+    if (isAuthenticated && user) {
+      console.log('User is authenticated, redirecting to home');
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +40,16 @@ const Login: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      await login(email, password);
+      console.log('Submitting login form');
+      const result = await login(email, password);
+      
+      if (!result?.success) {
+        console.log('Login was not successful');
+      }
       // No need to manually navigate as the AuthContext handles this
     } catch (error: any) {
-      console.error('Login error:', error);
-      // Error handling is already in the login function
+      console.error('Login submission error:', error);
+      toast.error(error.message || 'Failed to log in. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
