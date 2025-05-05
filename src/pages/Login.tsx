@@ -43,7 +43,9 @@ const Login: React.FC = () => {
       console.log('Submitting login form');
       const result = await login(email, password);
       
-      if (!result?.success) {
+      console.log('Login result:', result);
+      
+      if (!result.success) {
         console.log('Login was not successful');
       }
       // No need to manually navigate as the AuthContext handles this

@@ -1,14 +1,15 @@
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthUtils } from './useAuthUtils';
-import { User } from '@/types/auth';
+import { User, LoginResult } from '@/types/auth';
 
 export const useAuthActions = (setUser: (user: User | null) => void, setLoading: (loading: boolean) => void) => {
   const navigate = useNavigate();
   const { updateStoredUser, clearStoredUser, fetchUserProfile } = useAuthUtils();
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     setLoading(true);
     try {
       console.log('Attempting login for:', email);
