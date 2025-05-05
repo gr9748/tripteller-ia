@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +20,7 @@ export const useAuthActions = (setUser: (user: User | null) => void, setLoading:
       if (error) {
         console.error('Login error:', error.message);
         toast.error(error.message || 'Login failed');
+        setLoading(false); // Important: Reset loading state on error
         return { success: false, error };
       }
 
@@ -41,14 +41,14 @@ export const useAuthActions = (setUser: (user: User | null) => void, setLoading:
       } else {
         console.error('Login failed: No user data returned');
         toast.error('Login failed: No user data returned');
+        setLoading(false); // Important: Reset loading state when no user data
         return { success: false, error: new Error('No user data returned') };
       }
     } catch (error: any) {
       console.error('Login process error:', error);
       toast.error(error.message || 'An unexpected error occurred');
+      setLoading(false); // Important: Reset loading state on exception
       return { success: false, error };
-    } finally {
-      setLoading(false);
     }
   };
 

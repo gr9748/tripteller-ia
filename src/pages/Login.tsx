@@ -47,13 +47,13 @@ const Login: React.FC = () => {
       
       if (!result.success) {
         console.log('Login was not successful');
+        setIsSubmitting(false); // Reset submitting state on error
       }
       // No need to manually navigate as the AuthContext handles this
     } catch (error: any) {
       console.error('Login submission error:', error);
       toast.error(error.message || 'Failed to log in. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Reset submitting state on exception
     }
   };
 
@@ -133,7 +133,7 @@ const Login: React.FC = () => {
                   className="w-full"
                   disabled={isSubmitting || loading}
                 >
-                  {(isSubmitting || loading) ? (
+                  {(isSubmitting) ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
