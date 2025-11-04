@@ -20,7 +20,7 @@ interface TripPlan {
   end_date: string;
   budget: number;
   travelers: number;
-  interests: string | null;
+  interests: string[] | null;
   ai_response: any;
   created_at: string;
   updated_at: string;

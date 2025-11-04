@@ -18,7 +18,7 @@ export interface TripPlan {
   end_date: string;
   budget: number;
   travelers: number;
-  interests: string | null;
+  interests: string[] | null;
   ai_response: any;
   created_at: string;
   updated_at: string;
@@ -30,18 +30,10 @@ export const useTripFormSubmit = (resetForm: () => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedTripPlan, setGeneratedTripPlan] = useState<TripPlan | null>(null);
   
-  // Check authentication status before allowing submission
-  const checkAuth = async () => {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
-      console.log("Session check failed:", error);
-      if (isAuthenticated) {
-        toast.error('Your session has expired. Please sign in again.');
-        logout();
-      }
-      return false;
-    }
-    return true;
+  // Get current session token
+  const getAuthToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token;
   };
 
   const submitTripPlan = async (formData: TripFormData) => {
@@ -54,17 +46,10 @@ export const useTripFormSubmit = (resetForm: () => void) => {
     try {
       setIsSubmitting(true);
       
-      if (!(await checkAuth())) {
-        navigate('/login');
-        return;
-      }
-      
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      const token = await getAuthToken();
       
       if (!token) {
-        toast.error('Authentication error. Please sign in again.');
-        logout();
+        toast.error('Please sign in to create a trip plan');
         navigate('/login');
         return;
       }
