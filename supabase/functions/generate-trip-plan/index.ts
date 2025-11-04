@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticateUser } from "./auth-utils.ts";
 import { buildTripPlanPrompt, parseAIResponse } from "./prompt-builder.ts";
 
-const googleApiKey = Deno.env.get("GOOGLE_AI_API_KEY");
+const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
@@ -59,8 +59,8 @@ serve(async (req) => {
       source, destination, startDate, endDate, budget, travelers, interests
     });
 
-    if (!googleApiKey) {
-      console.error("Missing GOOGLE_AI_API_KEY");
+    if (!lovableApiKey) {
+      console.error("Missing LOVABLE_API_KEY");
       return new Response(
         JSON.stringify({ error: "Server configuration error: Missing API key" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -78,38 +78,58 @@ serve(async (req) => {
       interests
     });
 
-    // Call the Gemini API
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
+    // Call Lovable AI Gateway (using OpenAI-compatible format)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": googleApiKey,
+        "Authorization": `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
-        contents: [
+        model: "google/gemini-2.5-flash",
+        messages: [
           {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
+            role: "user",
+            content: prompt,
           },
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-        },
+        temperature: 0.7,
+        max_tokens: 8192,
       }),
     });
 
-    const data = await response.json();
-    console.log("Received response from Gemini API");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI Gateway error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI usage limit reached. Please add credits to your workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: "AI service error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Extract and parse the response
+    const data = await response.json();
+    console.log("Received response from Lovable AI");
+
+    // Extract and parse the response (OpenAI format)
     let aiResponse;
     try {
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        const responseText = data.candidates[0].content.parts[0].text;
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        const responseText = data.choices[0].message.content;
         aiResponse = parseAIResponse(responseText, data);
         
         // Validate budget compliance
@@ -127,8 +147,8 @@ serve(async (req) => {
         aiResponse = { error: "Failed to parse API response" };
       }
     } catch (error) {
-      console.error("Error processing Gemini response:", error);
-      aiResponse = { error: "Failed to parse Gemini response", rawResponse: data };
+      console.error("Error processing AI response:", error);
+      aiResponse = { error: "Failed to parse AI response", rawResponse: data };
     }
 
     // Store the trip plan in the database
