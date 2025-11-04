@@ -71,7 +71,7 @@ export const useTripFormSubmit = (resetForm: () => void) => {
           endDate: formData.endDate,
           budget: budgetValue,
           travelers: parseInt(formData.travelers),
-          interests: formData.interests
+          interests: formData.interests ? formData.interests.split(',').map(i => i.trim()).filter(i => i) : []
         },
         headers: {
           Authorization: `Bearer ${token}`

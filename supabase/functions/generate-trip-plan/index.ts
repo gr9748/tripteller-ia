@@ -162,7 +162,7 @@ serve(async (req) => {
         end_date: endDate,
         budget,
         travelers,
-        interests: interests || null,
+        interests: Array.isArray(interests) ? interests : (interests ? [interests] : []),
         ai_response: aiResponse
       })
       .select()
