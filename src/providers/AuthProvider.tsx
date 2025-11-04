@@ -6,9 +6,9 @@ import { useAuthActions } from '@/hooks/useAuthActions';
 import { supabase } from '@/integrations/supabase/client';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const { user, setUser } = useAuthState();
-  const { login, signup, logout } = useAuthActions(setUser, setLoading);
+  const [actionLoading, setActionLoading] = useState(false);
+  const { user, loading, setUser } = useAuthState();
+  const { login, signup, logout } = useAuthActions(setUser, setActionLoading);
   
   // Log auth state changes for debugging
   useEffect(() => {
@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
-    loading,
+    loading: loading || actionLoading,
     login,
     signup,
     logout,
